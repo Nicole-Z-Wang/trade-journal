@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>交易日志</title>
+<style>
+  :root {
+    --bg: #F7F6F3;
+    --surface: #FFFFFF;
+    --surface2: #F0EEE9;
+    --border: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.15);
+    --text: #1A1918;
+    --text2: #6B6860;
+    --text3: #A09D96;
+    --green: #1A7A4A;
+    --green-bg: #EAF4EE;
+    --red: #B83232;
+    --red-bg: #FAEAEA;
+    --amber: #8A5C00;
+    --amber-bg: #FDF3DC;
+    --accent: #1A1918;
+    --font: 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', system-ui, sans-serif;
+    --mono: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141312;
+      --surface: #1E1D1B;
+      --surface2: #272522;
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.15);
+      --text: #F0EDE8;
+      --text2: #9A9690;
+      --text3: #6A6660;
+      --green: #4ABA78;
+      --green-bg: #0E2B1A;
+      --red: #E06060;
+      --red-bg: #2A1010;
+      --amber: #E0A830;
+      --amber-bg: #2A1E00;
+      --accent: #F0EDE8;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+  /* Top bar */
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; gap: 12px; }
+  .topbar-left { display: flex; align-items: center; gap: 16px; }
+  .app-name { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; }
+  .nav-tabs { display: flex; gap: 2px; }
+  .nav-tab { padding: 5px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; color: var(--text2); border: none; background: none; font-family: var(--font); transition: background 0.15s, color 0.15s; }
+  .nav-tab:hover { background: var(--surface2); color: var(--text); }
+  .nav-tab.active { background: var(--surface2); color: var(--text); font-weight: 500; }
+  .topbar-right { display: flex; gap: 8px; align-items: center; }
+  .btn { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-family: var(--font); cursor: pointer; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text2); transition: background 0.15s; }
+  .btn:hover { background: var(--surface2); color: var(--text); }
+  .btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .btn-primary:hover { opacity: 0.85; }
+
+  /* Main layout */
+  .main { display: flex; flex: 1; overflow: hidden; }
+
+  /* Sidebar */
+  .sidebar { width: 240px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; }
+  .sidebar-search { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .sidebar-search input { width: 100%; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: var(--font); font-size: 12px; outline: none; }
+  .sidebar-search input::placeholder { color: var(--text3); }
+  .month-group { }
+  .month-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px 6px; cursor: pointer; user-select: none; }
+  .month-header:hover { background: var(--surface2); }
+  .month-name { font-size: 12px; font-weight: 600; color: var(--text2); letter-spacing: 0.02em; }
+  .month-meta { display: flex; align-items: center; gap: 6px; }
+  .pnl-badge { font-size: 11px; font-weight: 500; padding: 1px 6px; border-radius: 4px; }
+  .pnl-badge.pos { background: var(--green-bg); color: var(--green); }
+  .pnl-badge.neg { background: var(--red-bg); color: var(--red); }
+  .pnl-badge.neutral { background: var(--surface2); color: var(--text3); }
+  .trade-list { padding: 2px 8px 8px; }
+  .trade-row { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 6px; cursor: pointer; transition: background 0.1s; }
+  .trade-row:hover { background: var(--surface2); }
+  .trade-row.active { background: var(--surface2); }
+  .trade-row.active .trade-ticker { color: var(--text); }
+  .trade-ticker { font-size: 13px; font-weight: 600; color: var(--text); min-width: 52px; font-family: var(--mono); }
+  .trade-date-label { font-size: 11px; color: var(--text3); flex: 1; }
+  .dir-badge { font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 3px; }
+  .dir-long { background: var(--green-bg); color: var(--green); }
+  .dir-short { background: var(--red-bg); color: var(--red); }
+  .trade-pnl-mini { font-size: 11px; font-family: var(--mono); }
+  .trade-pnl-mini.pos { color: var(--green); }
+  .trade-pnl-mini.neg { color: var(--red); }
+
+  /* Detail pane */
+  .detail { flex: 1; overflow-y: auto; background: var(--bg); }
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; color: var(--text3); }
+  .empty-state p { font-size: 13px; }
+
+  /* Entry detail */
+  .entry-wrap { max-width: 760px; margin: 0 auto; padding: 28px 32px 60px; }
+  .entry-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+  .entry-left { }
+  .entry-ticker-row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .entry-ticker { font-size: 24px; font-weight: 700; font-family: var(--mono); letter-spacing: -0.5px; }
+  .entry-name { font-size: 13px; color: var(--text2); }
+  .entry-meta { font-size: 12px; color: var(--text3); display: flex; gap: 10px; align-items: center; margin-top: 4px; }
+  .entry-actions { display: flex; gap: 6px; }
+  .icon-btn { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text2); font-size: 14px; transition: background 0.15s; }
+  .icon-btn:hover { background: var(--surface2); color: var(--text); }
+
+  /* Data strip */
+  .data-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
+  .data-cell { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
+  .data-cell-label { font-size: 11px; color: var(--text3); margin-bottom: 3px; }
+  .data-cell-val { font-size: 15px; font-weight: 600; font-family: var(--mono); color: var(--text); }
+  .data-cell-val.pos { color: var(--green); }
+  .data-cell-val.neg { color: var(--red); }
+
+  /* Chart zone */
+  .chart-zone { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 20px; overflow: hidden; }
+  .chart-zone-header { padding: 10px 14px 0; display: flex; align-items: center; justify-content: space-between; }
+  .chart-zone-title { font-size: 11px; font-weight: 500; color: var(--text3); }
+  .chart-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 120px; gap: 8px; color: var(--text3); cursor: pointer; }
+  .chart-placeholder:hover { background: var(--surface2); }
+  .chart-placeholder p { font-size: 12px; }
+  .chart-img-wrap { position: relative; }
+  .chart-img-wrap img { width: 100%; max-height: 240px; object-fit: contain; display: block; }
+  .chart-remove { position: absolute; top: 6px; right: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; font-size: 11px; cursor: pointer; color: var(--text2); }
+
+  /* Sections */
+  .section { margin-bottom: 20px; }
+  .section-label { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  textarea { width: 100%; min-height: 90px; border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; font-family: var(--font); font-size: 13px; color: var(--text); background: var(--surface); resize: vertical; outline: none; line-height: 1.7; transition: border-color 0.15s; }
+  textarea:focus { border-color: var(--border-strong); }
+  textarea::placeholder { color: var(--text3); }
+  .error-block textarea { border-left: 3px solid var(--amber); }
+  .review-block textarea { border-left: 3px solid var(--green); }
+
+  /* Tags */
+  .tags-wrap { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .tag { font-size: 12px; padding: 3px 9px; border-radius: 20px; border: 1px solid var(--border); color: var(--text2); cursor: pointer; transition: background 0.1s; user-select: none; }
+  .tag:hover { background: var(--surface2); }
+  .tag.active { border-color: var(--text); color: var(--text); background: var(--surface2); font-weight: 500; }
+  .tag-input { border: 1px dashed var(--border); background: transparent; font-family: var(--font); font-size: 12px; color: var(--text); padding: 3px 8px; border-radius: 20px; outline: none; width: 80px; }
+  .tag-add-btn { font-size: 12px; color: var(--text3); cursor: pointer; padding: 3px 8px; border-radius: 20px; border: 1px dashed var(--border); }
+  .tag-add-btn:hover { color: var(--text); border-color: var(--border-strong); }
+
+  /* Rating */
+  .rating-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .rating-item { display: flex; align-items: center; gap: 6px; }
+  .rating-label { font-size: 12px; color: var(--text2); }
+  .stars { display: flex; gap: 3px; }
+  .star { font-size: 16px; cursor: pointer; color: var(--border-strong); transition: color 0.1s; }
+  .star.on { color: #D4941A; }
+  .star:hover ~ .star { color: var(--border-strong) !important; }
+  .stars:hover .star { color: #D4941A; }
+  .stars .star:hover ~ .star { color: var(--border-strong); }
+
+  /* Stats view */
+  .stats-wrap { max-width: 760px; margin: 0 auto; padding: 28px 32px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+  .stat-card-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+  .stat-card-val { font-size: 22px; font-weight: 700; font-family: var(--mono); color: var(--text); }
+  .stat-card-val.pos { color: var(--green); }
+  .stat-card-val.neg { color: var(--red); }
+  .stat-card-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  .chart-bar-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 20px; }
+  .chart-bar-title { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 14px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 2px; transition: opacity 0.2s; cursor: pointer; }
+  .bar:hover { opacity: 0.75; }
+  .bar.pos { background: var(--green); }
+  .bar.neg { background: var(--red); }
+  .bar-label { font-size: 10px; color: var(--text3); }
+
+  /* System view */
+  .system-wrap { max-width: 760px; margin: 0 auto; padding: 28px 32px; }
+  .system-section { margin-bottom: 24px; }
+  .system-title { font-size: 16px; font-weight: 600; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .system-section textarea { min-height: 120px; }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; width: 520px; max-width: 95vw; border: 1px solid var(--border-strong); }
+  .modal-title { font-size: 15px; font-weight: 600; margin-bottom: 18px; }
+  .form-row { margin-bottom: 14px; }
+  .form-label { font-size: 12px; color: var(--text2); margin-bottom: 5px; display: block; }
+  .form-input { width: 100%; padding: 7px 10px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--surface2); color: var(--text); font-family: var(--font); font-size: 13px; outline: none; }
+  .form-input:focus { border-color: var(--text); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+  select.form-input { cursor: pointer; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: 13px; opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none; z-index: 200; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 10px; }
+
+  /* File input hidden */
+  #file-import { display: none; }
+
+  /* ── Sector color palette ───────────────────────────────────── */
+  .sc-0 { background:#E8EEFF; color:#3D52B0; border-color:#C5CFFB; }
+  .sc-1 { background:#FEF9E0; color:#8A6200; border-color:#F5DC80; }
+  .sc-2 { background:#E4F8EC; color:#1A7A42; border-color:#A8E8C0; }
+  .sc-3 { background:#FDEEF6; color:#A0296A; border-color:#F5BEE0; }
+  .sc-4 { background:#E0F5FF; color:#0A6EA0; border-color:#A0DEFA; }
+  .sc-5 { background:#FDEAEA; color:#B03030; border-color:#F5AAAA; }
+  .sc-6 { background:#F2ECFF; color:#7030A8; border-color:#DABEFC; }
+  .sc-7 { background:#E8FBF4; color:#0E6B52; border-color:#90E8CC; }
+  .sc-8 { background:#FFF3E8; color:#A04010; border-color:#F8C89A; }
+  .sc-9 { background:#EDFBE0; color:#387018; border-color:#AAEА80; }
+  @media (prefers-color-scheme: dark) {
+    .sc-0 { background:#1A1F42; color:#9AAEF8; border-color:#2E3A8A; }
+    .sc-1 { background:#1E1800; color:#F0C840; border-color:#5A4200; }
+    .sc-2 { background:#041E0E; color:#70D898; border-color:#0E4A22; }
+    .sc-3 { background:#280818; color:#F090C0; border-color:#600830; }
+    .sc-4 { background:#041828; color:#60C8F0; border-color:#0A4068; }
+    .sc-5 { background:#280808; color:#F09090; border-color:#601010; }
+    .sc-6 { background:#200840; color:#C090F8; border-color:#4A1880; }
+    .sc-7 { background:#021A10; color:#50D8A8; border-color:#084830; }
+    .sc-8 { background:#200800; color:#F0A060; border-color:#602000; }
+    .sc-9 { background:#081800; color:#80D840; border-color:#204800; }
+  }
+
+  /* Structured timeline entry */
+  .tl-structured { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .tl-structured-meta { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--border); flex-wrap: wrap; align-items: center; background: var(--surface2); }
+  .tl-type-badge { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 4px; border: 1px solid; }
+  .tl-type-market  { background:#EEF2FF; color:#3730A3; border-color:#C7D2FE; }
+  .tl-type-fundamental { background:#DCFCE7; color:#166534; border-color:#BBF7D0; }
+  .tl-type-sentiment { background:#FEF3C7; color:#92400E; border-color:#FDE68A; }
+  .tl-type-policy { background:#F3E8FF; color:#6B21A8; border-color:#E9D5FF; }
+  .tl-type-logic { background:#FEE2E2; color:#991B1B; border-color:#FECACA; }
+  @media (prefers-color-scheme: dark) {
+    .tl-type-market { background:#1E1B4B; color:#A5B4FC; border-color:#3730A3; }
+    .tl-type-fundamental { background:#052E16; color:#86EFAC; border-color:#166534; }
+    .tl-type-sentiment { background:#1C1408; color:#FCD34D; border-color:#78350F; }
+    .tl-type-policy { background:#3B0764; color:#D8B4FE; border-color:#6B21A8; }
+    .tl-type-logic { background:#450A0A; color:#FCA5A5; border-color:#991B1B; }
+  }
+  .tl-logic-tag { font-size: 11px; padding: 2px 6px; border-radius: 4px; }
+  .tl-logic-same { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+  .tl-logic-stronger { background: var(--green-bg); color: var(--green); }
+  .tl-logic-weaker { background: var(--amber-bg); color: var(--amber); }
+  .tl-logic-broken { background: var(--red-bg); color: var(--red); }
+  .tl-action-tag { font-size: 11px; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); color: var(--text2); background: var(--surface); }
+  .tl-action-buy { color: var(--green); border-color: var(--green); background: var(--green-bg); font-weight:600; }
+  .tl-action-reduce { color: var(--red); border-color: var(--red); background: var(--red-bg); font-weight:600; }
+  .tl-action-traded { color: var(--amber); border-color: var(--amber); background: var(--amber-bg); font-weight:600; }
+  .tl-structured-body { padding: 10px 12px; font-size: 13px; color: var(--text); line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+
+  /* Info strip */
+  .watch-info-strip { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
+  .info-chip { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; }
+  .info-chip-label { color: var(--text3); font-size: 11px; }
+  .info-chip-val { font-weight: 500; color: var(--text); font-family: var(--mono); }
+  .info-chip-val.amber { color: var(--amber); }
+
+  /* Compose form */
+  .compose-form { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 24px; }
+  .compose-selectors { display: flex; gap: 6px; padding: 10px 12px; border-bottom: 1px solid var(--border); flex-wrap: wrap; background: var(--surface2); }
+  .compose-sel { padding: 4px 10px; border-radius: 5px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); font-size: 12px; font-family: var(--font); cursor: pointer; outline: none; }
+  .compose-sel:focus { border-color: var(--border-strong); }
+  select.compose-sel { cursor: pointer; }
+  .compose-body { padding: 10px 12px; }
+  .compose-body textarea { border: none; background: transparent; min-height: 72px; padding: 0; font-size: 13px; }
+  .compose-body textarea:focus { border: none; }
+  .compose-footer { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-top: 1px solid var(--border); }
+
+  /* ── Watchlist view ─────────────────────────────────────────── */
+  .watch-layout { display: flex; flex: 1; overflow: hidden; height: 100%; }
+  .watch-sidebar { width: 240px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; }
+  .watch-sidebar-header { padding: 10px 12px; border-bottom: 1px solid var(--border); display: flex; gap: 6px; }
+  .watch-sidebar-header input { flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: var(--font); font-size: 12px; outline: none; }
+  .watch-sidebar-header input::placeholder { color: var(--text3); }
+  .watch-add-btn { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--text); color: var(--bg); font-size: 12px; cursor: pointer; font-family: var(--font); white-space: nowrap; }
+  .watch-group-label { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.05em; padding: 10px 14px 4px; }
+  .watch-row { display: flex; align-items: center; gap: 8px; padding: 7px 14px; cursor: pointer; transition: background 0.1s; }
+  .watch-row:hover { background: var(--surface2); }
+  .watch-row.active { background: var(--surface2); }
+  .watch-row-left { flex: 1; min-width: 0; }
+  .watch-ticker { font-size: 13px; font-weight: 600; font-family: var(--mono); color: var(--text); }
+  .watch-name { font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .watch-sentiment { font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 3px; flex-shrink: 0; }
+  .sent-bull { background: var(--green-bg); color: var(--green); }
+  .sent-bear { background: var(--red-bg); color: var(--red); }
+  .sent-neut { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+  .sent-wait { background: var(--amber-bg); color: var(--amber); }
+
+  /* Watch detail */
+  .watch-detail { flex: 1; overflow-y: auto; background: var(--bg); }
+  .watch-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; color: var(--text3); }
+  .watch-entry-wrap { max-width: 760px; margin: 0 auto; padding: 28px 32px 60px; }
+  .watch-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+  .watch-ticker-big { font-size: 24px; font-weight: 700; font-family: var(--mono); letter-spacing: -0.5px; }
+  .watch-meta-row { display: flex; align-items: center; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
+  .watch-sector-badge { font-size: 11px; padding: 2px 7px; border-radius: 4px; background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .watch-target { font-size: 12px; color: var(--amber); background: var(--amber-bg); padding: 2px 8px; border-radius: 4px; font-family: var(--mono); }
+
+  /* Sentiment selector */
+  .sent-selector { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+  .sent-btn { padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-family: var(--font); cursor: pointer; background: var(--surface); color: var(--text2); transition: all 0.15s; }
+  .sent-btn:hover { border-color: var(--border-strong); color: var(--text); }
+  .sent-btn.active-bull { background: var(--green-bg); color: var(--green); border-color: var(--green); font-weight: 600; }
+  .sent-btn.active-bear { background: var(--red-bg); color: var(--red); border-color: var(--red); font-weight: 600; }
+  .sent-btn.active-neut { background: var(--surface2); color: var(--text); border-color: var(--border-strong); font-weight: 600; }
+  .sent-btn.active-wait { background: var(--amber-bg); color: var(--amber); border-color: var(--amber); font-weight: 600; }
+
+  /* Timeline */
+  .timeline { position: relative; }
+  .timeline-add { display: flex; gap: 8px; margin-bottom: 20px; align-items: flex-start; }
+  .timeline-add textarea { min-height: 64px; flex: 1; }
+  .timeline-add-col { display: flex; flex-direction: column; gap: 6px; }
+  .timeline-submit { padding: 7px 14px; border-radius: 6px; border: none; background: var(--text); color: var(--bg); font-size: 12px; font-family: var(--font); cursor: pointer; white-space: nowrap; }
+  .timeline-submit:hover { opacity: 0.85; }
+  .tl-item { display: flex; gap: 12px; margin-bottom: 20px; }
+  .tl-spine { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .tl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-strong); margin-top: 5px; flex-shrink: 0; }
+  .tl-dot.has-img { background: var(--green); }
+  .tl-line { width: 1px; flex: 1; background: var(--border); margin-top: 4px; min-height: 20px; }
+  .tl-body { flex: 1; min-width: 0; }
+  .tl-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  .tl-date { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+  .tl-img-badge { font-size: 10px; color: var(--green); }
+  .tl-delete { font-size: 11px; color: var(--text3); cursor: pointer; margin-left: auto; opacity: 0; transition: opacity 0.15s; }
+  .tl-item:hover .tl-delete { opacity: 1; }
+  .tl-text { font-size: 13px; color: var(--text); line-height: 1.7; white-space: pre-wrap; word-break: break-word; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
+  .tl-img { margin-top: 8px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+  .tl-img img { width: 100%; display: block; max-height: 300px; object-fit: contain; background: var(--surface2); }
+  .tl-img-actions { display: flex; justify-content: flex-end; padding: 4px 6px; background: var(--surface); }
+  .tl-img-remove { font-size: 11px; color: var(--text3); cursor: pointer; }
+  .tl-img-remove:hover { color: var(--red); }
+  .img-upload-btn { padding: 5px 10px; border-radius: 6px; border: 1px dashed var(--border-strong); background: transparent; color: var(--text3); font-size: 12px; font-family: var(--font); cursor: pointer; white-space: nowrap; }
+  .img-upload-btn:hover { color: var(--text); border-color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="app-name">交易日志</span>
+    <nav class="nav-tabs">
+      <button class="nav-tab active" onclick="switchView('journal')">日志</button>
+      <button class="nav-tab" onclick="switchView('stats')">统计</button>
+      <button class="nav-tab" onclick="switchView('system')">体系</button>
+      <button class="nav-tab" onclick="switchView('watch')">跟踪</button>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <span id="sync-dot" class="sync-dot" title="已同步"></span>
+    <button class="btn" onclick="exportData()">导出 JSON</button>
+    <button class="btn" onclick="document.getElementById('file-import').click()">导入 JSON</button>
+    <input type="file" id="file-import" accept=".json" onchange="importData(event)">
+    <button class="btn btn-primary" onclick="openNewModal()">＋ 新建交易</button>
+    <button class="btn" onclick="logout()" title="退出登录" style="padding:6px 8px">⏻</button>
+  </div>
+</div>
+
+<div class="main">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-search">
+      <input type="text" placeholder="搜索标的..." id="search-input" oninput="renderSidebar()">
+    </div>
+    <div id="sidebar-list"></div>
+  </div>
+
+  <!-- Views -->
+  <div class="detail" id="view-journal">
+    <div class="empty-state" id="empty-state">
+      <div style="font-size:32px">📒</div>
+      <p style="font-weight:500;color:var(--text2)">还没有交易记录</p>
+      <p>点击右上角「新建交易」开始记录</p>
+    </div>
+    <div class="entry-wrap" id="entry-detail" style="display:none"></div>
+  </div>
+
+  <div class="detail" id="view-stats" style="display:none">
+    <div class="stats-wrap" id="stats-content"></div>
+  </div>
+
+  <div class="detail" id="view-system" style="display:none">
+    <div class="system-wrap" id="system-content"></div>
+  </div>
+
+  <div id="view-watch" style="display:none;flex:1;overflow:hidden;display:none">
+    <div class="watch-layout">
+      <div class="watch-sidebar">
+        <div class="watch-sidebar-header">
+          <input type="text" id="watch-search" placeholder="搜索…" oninput="renderWatchSidebar()">
+          <button class="watch-add-btn" onclick="openWatchModal()">＋</button>
+        </div>
+        <div id="watch-sidebar-list"></div>
+      </div>
+      <div class="watch-detail" id="watch-detail">
+        <div class="watch-empty">
+          <div style="font-size:32px">🔭</div>
+          <p style="font-weight:500;color:var(--text2)">还没有跟踪对象</p>
+          <p>点击左上角「＋」添加板块或个股</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New/Edit Trade Modal -->
+<div class="modal-overlay" id="trade-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">新建交易</div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">标的代码 *</label>
+        <input class="form-input" id="f-ticker" placeholder="如 600519 / 00700">
+      </div>
+      <div class="form-row">
+        <label class="form-label">标的名称</label>
+        <input class="form-input" id="f-name" placeholder="如 贵州茅台">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">方向 *</label>
+        <select class="form-input" id="f-dir">
+          <option value="long">多头（买入）</option>
+          <option value="short">空头（卖出）</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">市场</label>
+        <select class="form-input" id="f-market">
+          <option value="A股">A股</option>
+          <option value="港股">港股</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">买入日期 *</label>
+        <input class="form-input" id="f-date-in" type="date">
+      </div>
+      <div class="form-row">
+        <label class="form-label">卖出日期</label>
+        <input class="form-input" id="f-date-out" type="date">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">买入价 *</label>
+        <input class="form-input" id="f-price-in" type="number" step="0.01" placeholder="0.00">
+      </div>
+      <div class="form-row">
+        <label class="form-label">卖出价</label>
+        <input class="form-input" id="f-price-out" type="number" step="0.01" placeholder="0.00">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">仓位比例 (%)</label>
+        <input class="form-input" id="f-position" type="number" step="1" min="1" max="100" placeholder="如 15">
+      </div>
+      <div class="form-row">
+        <label class="form-label">盈亏金额（元/港元）</label>
+        <input class="form-input" id="f-pnl" type="number" step="0.01" placeholder="正数盈利，负数亏损">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveTradeModal()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Watchlist Add/Edit Modal -->
+<div class="modal-overlay" id="watch-modal">
+  <div class="modal" style="width:580px">
+    <div class="modal-title" id="watch-modal-title">新增跟踪对象</div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">代码 *</label>
+        <input class="form-input" id="wf-ticker" placeholder="如 600519 / 00700 / 白酒板块">
+      </div>
+      <div class="form-row">
+        <label class="form-label">名称</label>
+        <input class="form-input" id="wf-name" placeholder="如 贵州茅台">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">板块分类</label>
+        <input class="form-input" id="wf-sector" placeholder="如 消费、科技、新能源" oninput="updateSectorPreview()">
+      </div>
+      <div class="form-row">
+        <label class="form-label">市场</label>
+        <select class="form-input" id="wf-market">
+          <option value="A股">A股</option>
+          <option value="港股">港股</option>
+          <option value="板块">板块/主题</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">板块颜色标签</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <div id="sector-preview" style="font-size:12px;padding:3px 10px;border-radius:4px;border:1px solid var(--border);color:var(--text3)">预览</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap" id="color-swatches"></div>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">当前观点</label>
+        <select class="form-input" id="wf-sentiment">
+          <option value="wait">观望</option>
+          <option value="bull">看多</option>
+          <option value="bear">看空</option>
+          <option value="neut">中性</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">目标价 / 触发条件</label>
+        <input class="form-input" id="wf-target" placeholder="如 ¥180 或 突破颈线">
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);margin:14px 0 14px;"></div>
+    <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px">核心分析框架（建立时填写，后续可编辑）</div>
+    <div class="form-row">
+      <label class="form-label">核心逻辑 — 为什么值得跟踪？投资主线是什么？</label>
+      <textarea class="form-input" id="wf-thesis" style="min-height:60px;resize:vertical;font-size:13px;line-height:1.6" placeholder="如：AI算力需求持续增长，国产替代加速，估值处于历史低位…"></textarea>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">关键催化剂</label>
+        <textarea class="form-input" id="wf-catalyst" style="min-height:50px;resize:vertical;font-size:13px;line-height:1.6" placeholder="什么事件或数据会推动它？"></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">逻辑失效条件</label>
+        <textarea class="form-input" id="wf-invalidation" style="min-height:50px;resize:vertical;font-size:13px;line-height:1.6" placeholder="什么情况下你会放弃跟踪？"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeWatchModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveWatch()">保存</button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ── Login screen ─────────────────────────────────────── */
+.login-screen { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:999; flex-direction:column; gap:0; }
+.login-box { background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--radius-lg); padding:36px 40px 32px; width:360px; }
+.login-logo { font-size:18px; font-weight:700; margin-bottom:6px; letter-spacing:-0.3px; }
+.login-sub { font-size:13px; color:var(--text3); margin-bottom:28px; }
+.login-tabs { display:flex; gap:0; margin-bottom:22px; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+.login-tab { flex:1; padding:7px; text-align:center; font-size:13px; cursor:pointer; background:transparent; border:none; font-family:var(--font); color:var(--text2); transition:background 0.15s; }
+.login-tab.active { background:var(--surface2); color:var(--text); font-weight:500; }
+.login-field { margin-bottom:14px; }
+.login-field label { display:block; font-size:12px; color:var(--text2); margin-bottom:5px; }
+.login-field input { width:100%; padding:8px 11px; border:1px solid var(--border-strong); border-radius:6px; background:var(--surface2); color:var(--text); font-family:var(--font); font-size:13px; outline:none; }
+.login-field input:focus { border-color:var(--text); }
+.login-btn { width:100%; padding:9px; border-radius:6px; border:none; background:var(--text); color:var(--bg); font-size:13px; font-family:var(--font); font-weight:500; cursor:pointer; margin-top:6px; transition:opacity 0.15s; }
+.login-btn:hover { opacity:0.85; }
+.login-err { font-size:12px; color:var(--red); margin-top:10px; min-height:18px; text-align:center; }
+.login-loading { font-size:12px; color:var(--text3); margin-top:10px; text-align:center; }
+.sync-dot { width:7px; height:7px; border-radius:50%; background:var(--green); display:inline-block; margin-right:5px; }
+.sync-dot.syncing { background:var(--amber); animation:pulse 1s infinite; }
+.sync-dot.error { background:var(--red); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+</style>
+
+<!-- Login Screen -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">交易日志</div>
+    <div class="login-sub">登录后数据自动云端同步</div>
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="setLoginTab('login')">登录</button>
+      <button class="login-tab" onclick="setLoginTab('signup')">注册</button>
+    </div>
+    <div class="login-field"><label>邮箱</label><input id="auth-email" type="email" placeholder="your@email.com" autocomplete="email"></div>
+    <div class="login-field"><label>密码</label><input id="auth-password" type="password" placeholder="至少6位" autocomplete="current-password"></div>
+    <button class="login-btn" id="auth-btn" onclick="handleAuth()">登录</button>
+    <div class="login-err" id="auth-err"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Supabase ────────────────────────────────────────────────────────────
+const SB_URL  = 'https://zibdzpusqsqzsikvwfwd.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InppYmR6cHVzcXNxenNpa3Z3ZndkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NzgyMDUsImV4cCI6MjA5NzE1NDIwNX0.6SB2icyntKKWZQE_7ruDj9EgKrVbsuwb0PMFYGMZz08';
+
+let _session = null; // { access_token, user }
+
+async function sbFetch(path, opts = {}) {
+  const headers = {
+    'apikey': SB_KEY,
+    'Content-Type': 'application/json',
+    ...(opts.headers || {})
+  };
+  if (_session?.access_token) headers['Authorization'] = 'Bearer ' + _session.access_token;
+  const res = await fetch(SB_URL + path, { ...opts, headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || err.error_description || res.statusText);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+// ── Auth ──
+let _loginTab = 'login';
+function setLoginTab(t) {
+  _loginTab = t;
+  document.querySelectorAll('.login-tab').forEach((el,i) => el.classList.toggle('active', ['login','signup'][i]===t));
+  document.getElementById('auth-btn').textContent = t === 'login' ? '登录' : '注册';
+  document.getElementById('auth-err').textContent = '';
+}
+
+async function handleAuth() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-err');
+  errEl.textContent = '';
+  if (!email || !password) { errEl.textContent = '请填写邮箱和密码'; return; }
+  document.getElementById('auth-btn').textContent = '请稍候…';
+  try {
+    const endpoint = _loginTab === 'login' ? '/auth/v1/token?grant_type=password' : '/auth/v1/signup';
+    const data = await sbFetch(endpoint, {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+    if (_loginTab === 'signup' && !data.access_token) {
+      errEl.textContent = '注册成功！请查收验证邮件后登录';
+      document.getElementById('auth-btn').textContent = '注册';
+      return;
+    }
+    _session = { access_token: data.access_token, user: data.user };
+    localStorage.setItem('tj_session', JSON.stringify(_session));
+    await bootApp();
+  } catch(e) {
+    errEl.textContent = e.message.includes('Invalid') ? '邮箱或密码错误' : e.message;
+    document.getElementById('auth-btn').textContent = _loginTab === 'login' ? '登录' : '注册';
+  }
+}
+
+async function tryRestoreSession() {
+  try {
+    const raw = localStorage.getItem('tj_session');
+    if (!raw) return false;
+    const saved = JSON.parse(raw);
+    // Verify token still valid
+    const user = await sbFetch('/auth/v1/user', { headers: { 'Authorization': 'Bearer ' + saved.access_token } });
+    if (user?.id) { _session = saved; return true; }
+  } catch(e) {}
+  localStorage.removeItem('tj_session');
+  return false;
+}
+
+function logout() {
+  localStorage.removeItem('tj_session');
+  _session = null;
+  location.reload();
+}
+
+// ─── Data ────────────────────────────────────────────────────────────────
+let db = { trades: [], watchlist: [], system: { entry:'', exit:'', risk:'', mindset:'' } };
+let selectedId = null;
+let editingId = null;
+let currentView = 'journal';
+let _saveTimer = {};
+
+// ── Sync indicator ──
+function setSyncState(state) { // 'ok' | 'syncing' | 'error'
+  const dot = document.getElementById('sync-dot');
+  if (!dot) return;
+  dot.className = 'sync-dot' + (state === 'syncing' ? ' syncing' : state === 'error' ? ' error' : '');
+  dot.title = state === 'ok' ? '已同步' : state === 'syncing' ? '同步中…' : '同步失败';
+}
+
+// ── Load all data from Supabase ──
+async function loadDB() {
+  setSyncState('syncing');
+  try {
+    const uid = _session.user.id;
+    const [tradesRows, watchRows, sysRows] = await Promise.all([
+      sbFetch(`/rest/v1/trades?user_id=eq.${uid}&select=id,data`),
+      sbFetch(`/rest/v1/watchlist?user_id=eq.${uid}&select=id,data`),
+      sbFetch(`/rest/v1/system_notes?user_id=eq.${uid}&select=data`)
+    ]);
+    db.trades   = (tradesRows  || []).map(r => r.data);
+    db.watchlist= (watchRows   || []).map(r => r.data);
+    db.system   = sysRows?.[0]?.data || { entry:'', exit:'', risk:'', mindset:'' };
+    setSyncState('ok');
+  } catch(e) {
+    setSyncState('error');
+    showToast('加载数据失败，请刷新');
+  }
+}
+
+// ── Save helpers (debounced per table) ──
+function debounceSave(table, fn, delay=800) {
+  clearTimeout(_saveTimer[table]);
+  _saveTimer[table] = setTimeout(fn, delay);
+}
+
+async function saveTrade(trade) {
+  setSyncState('syncing');
+  try {
+    await sbFetch('/rest/v1/trades', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify({ id: trade.id, user_id: _session.user.id, data: trade, updated_at: new Date().toISOString() })
+    });
+    setSyncState('ok');
+  } catch(e) { setSyncState('error'); showToast('同步失败，请重试'); }
+}
+
+async function deleteTradeSB(id) {
+  setSyncState('syncing');
+  try {
+    await sbFetch(`/rest/v1/trades?id=eq.${id}`, { method: 'DELETE' });
+    setSyncState('ok');
+  } catch(e) { setSyncState('error'); }
+}
+
+async function saveWatchItem(item) {
+  setSyncState('syncing');
+  try {
+    await sbFetch('/rest/v1/watchlist', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify({ id: item.id, user_id: _session.user.id, data: item, updated_at: new Date().toISOString() })
+    });
+    setSyncState('ok');
+  } catch(e) { setSyncState('error'); showToast('同步失败，请重试'); }
+}
+
+async function deleteWatchSB(id) {
+  setSyncState('syncing');
+  try {
+    await sbFetch(`/rest/v1/watchlist?id=eq.${id}`, { method: 'DELETE' });
+    setSyncState('ok');
+  } catch(e) { setSyncState('error'); }
+}
+
+async function saveSystemSB() {
+  setSyncState('syncing');
+  try {
+    await sbFetch('/rest/v1/system_notes', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify({ user_id: _session.user.id, data: db.system, updated_at: new Date().toISOString() })
+    });
+    setSyncState('ok');
+  } catch(e) { setSyncState('error'); }
+}
+
+// ── Compatibility shim: old code calls saveDB() ──
+function saveDB() {
+  // no-op: each action calls the specific SB save instead
+}
+
+// ─── View switching ──────────────────────────────────────────────────────
+function switchView(v) {
+  currentView = v;
+  const views = ['journal','stats','system','watch'];
+  views.forEach(name => {
+    const el = document.getElementById('view-' + name);
+    if (el) el.style.display = name === v ? (name === 'watch' ? 'flex' : '') : 'none';
+  });
+  document.querySelectorAll('.nav-tab').forEach((t, i) => {
+    t.classList.toggle('active', views[i] === v);
+  });
+  if (v === 'stats') renderStats();
+  if (v === 'system') renderSystem();
+  if (v === 'watch') { renderWatchSidebar(); if (!selectedWatchId && db.watchlist.length) { selectedWatchId = db.watchlist[0].id; } renderWatchDetail(); }
+}
+
+// ─── Sidebar ─────────────────────────────────────────────────────────────
+function renderSidebar() {
+  const q = (document.getElementById('search-input').value || '').toLowerCase();
+  const trades = db.trades.filter(t =>
+    !q || t.ticker.toLowerCase().includes(q) || (t.name||'').toLowerCase().includes(q)
+  );
+
+  // Group by year-month
+  const groups = {};
+  trades.forEach(t => {
+    const key = t.dateIn.slice(0, 7);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(t);
+  });
+  const sortedKeys = Object.keys(groups).sort((a,b) => b.localeCompare(a));
+
+  const el = document.getElementById('sidebar-list');
+  if (!sortedKeys.length) {
+    el.innerHTML = '<div style="padding:16px 14px;font-size:12px;color:var(--text3)">暂无记录</div>';
+    return;
+  }
+
+  el.innerHTML = sortedKeys.map(key => {
+    const list = groups[key].sort((a,b) => b.dateIn.localeCompare(a.dateIn));
+    const totalPnl = list.reduce((s, t) => s + (parseFloat(t.pnl) || 0), 0);
+    const pnlClass = totalPnl > 0 ? 'pos' : totalPnl < 0 ? 'neg' : 'neutral';
+    const pnlText = totalPnl === 0 ? '—' : (totalPnl > 0 ? '+' : '') + totalPnl.toLocaleString('zh-CN', {maximumFractionDigits: 0});
+    const ym = key.split('-');
+    const label = ym[0] + '年' + parseInt(ym[1]) + '月';
+
+    const rows = list.map(t => {
+      const pnl = parseFloat(t.pnl);
+      const pnlMini = isNaN(pnl) ? '' : `<span class="trade-pnl-mini ${pnl>=0?'pos':'neg'}">${pnl>0?'+':''}${pnl.toLocaleString('zh-CN',{maximumFractionDigits:0})}</span>`;
+      const d = t.dateIn.slice(5).replace('-', '/');
+      return `<div class="trade-row${t.id===selectedId?' active':''}" onclick="selectTrade('${t.id}')">
+        <span class="trade-ticker">${t.ticker}</span>
+        <span class="trade-date-label">${d}</span>
+        <span class="dir-badge ${t.dir==='long'?'dir-long':'dir-short'}">${t.dir==='long'?'多':'空'}</span>
+        ${pnlMini}
+      </div>`;
+    }).join('');
+
+    return `<div class="month-group">
+      <div class="month-header">
+        <span class="month-name">${label}</span>
+        <div class="month-meta">
+          <span class="pnl-badge ${pnlClass}">${pnlText}</span>
+          <span style="font-size:11px;color:var(--text3)">${list.length}笔</span>
+        </div>
+      </div>
+      <div class="trade-list">${rows}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Trade detail ─────────────────────────────────────────────────────────
+function selectTrade(id) {
+  selectedId = id;
+  renderSidebar();
+  renderDetail();
+}
+
+function renderDetail() {
+  const t = db.trades.find(x => x.id === selectedId);
+  const empty = document.getElementById('empty-state');
+  const detail = document.getElementById('entry-detail');
+
+  if (!t) {
+    empty.style.display = '';
+    detail.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  detail.style.display = '';
+
+  const pnl = parseFloat(t.pnl);
+  const pnlStr = isNaN(pnl) ? '—' : (pnl >= 0 ? '+' : '') + pnl.toLocaleString('zh-CN', {maximumFractionDigits: 2});
+  const pnlClass = isNaN(pnl) ? '' : pnl >= 0 ? 'pos' : 'neg';
+  const piStr = t.priceIn ? parseFloat(t.priceIn).toFixed(2) : '—';
+  const poStr = t.priceOut ? parseFloat(t.priceOut).toFixed(2) : '持仓中';
+  const posStr = t.position ? t.position + '%' : '—';
+  const holdDays = t.dateOut ? Math.round((new Date(t.dateOut)-new Date(t.dateIn))/86400000) : null;
+  const holdStr = holdDays !== null ? holdDays + '天' : '持仓中';
+  const dIn = t.dateIn.replace(/-/g, '/');
+  const dOut = t.dateOut ? t.dateOut.replace(/-/g, '/') : '—';
+
+  const chartArea = t.chartImg
+    ? `<div class="chart-img-wrap">
+        <img src="${t.chartImg}" alt="走势图">
+        <button class="chart-remove" onclick="removeChart('${t.id}')">✕ 移除</button>
+       </div>`
+    : `<div class="chart-placeholder" onclick="uploadChart('${t.id}')">
+        <div style="font-size:24px">📈</div>
+        <p>点击上传截图（K线、盘面）</p>
+       </div>`;
+
+  const tags = (t.tags || []);
+  const tagHtml = tags.map(tag =>
+    `<span class="tag active" onclick="removeTag('${t.id}','${tag}')">${tag} ✕</span>`
+  ).join('') + `<span class="tag tag-add-btn" onclick="showTagInput('${t.id}')">＋ 标签</span>`;
+
+  const execStars = [1,2,3,4,5].map(i =>
+    `<span class="star${(t.execScore||0)>=i?' on':''}" onclick="setScore('${t.id}','exec',${i})">★</span>`
+  ).join('');
+  const logicStars = [1,2,3,4,5].map(i =>
+    `<span class="star${(t.logicScore||0)>=i?' on':''}" onclick="setScore('${t.id}','logic',${i})">★</span>`
+  ).join('');
+
+  detail.innerHTML = `
+    <div class="entry-top">
+      <div class="entry-left">
+        <div class="entry-ticker-row">
+          <span class="entry-ticker">${t.ticker}</span>
+          ${t.name ? `<span style="font-size:14px;color:var(--text2);font-weight:500">${t.name}</span>` : ''}
+          <span class="dir-badge ${t.dir==='long'?'dir-long':'dir-short'}" style="font-size:12px;padding:2px 7px">${t.dir==='long'?'多头':'空头'}</span>
+          <span class="pnl-badge neutral">${t.market||'A股'}</span>
+        </div>
+        <div class="entry-meta">
+          <span>买入 ${dIn}</span>
+          <span>·</span>
+          <span>卖出 ${dOut}</span>
+          <span>·</span>
+          <span>持仓 ${holdStr}</span>
+        </div>
+      </div>
+      <div class="entry-actions">
+        <button class="icon-btn" title="编辑基本信息" onclick="openEditModal('${t.id}')">✎</button>
+        <button class="icon-btn" title="删除" onclick="deleteTrade('${t.id}')">🗑</button>
+      </div>
+    </div>
+
+    <div class="data-strip">
+      <div class="data-cell"><div class="data-cell-label">买入价</div><div class="data-cell-val">${piStr}</div></div>
+      <div class="data-cell"><div class="data-cell-label">卖出价</div><div class="data-cell-val">${poStr}</div></div>
+      <div class="data-cell"><div class="data-cell-label">仓位</div><div class="data-cell-val">${posStr}</div></div>
+      <div class="data-cell"><div class="data-cell-label">盈亏</div><div class="data-cell-val ${pnlClass}">${pnlStr}</div></div>
+      <div class="data-cell"><div class="data-cell-label">持仓天数</div><div class="data-cell-val">${holdStr}</div></div>
+    </div>
+
+    <div class="chart-zone">
+      <div class="chart-zone-header"><span class="chart-zone-title">盘面截图</span></div>
+      ${chartArea}
+    </div>
+
+    <div class="section">
+      <div class="section-label">买入逻辑</div>
+      <textarea placeholder="为什么买入？基本面、技术面、催化剂、市场结构……" onblur="saveField('${t.id}','logic',this.value)">${t.logic||''}</textarea>
+    </div>
+
+    <div class="section error-block">
+      <div class="section-label">纠错 · 哪里做错了</div>
+      <textarea placeholder="入场时机、止损设置、仓位管理、情绪干扰……" onblur="saveField('${t.id}','errors',this.value)">${t.errors||''}</textarea>
+    </div>
+
+    <div class="section review-block">
+      <div class="section-label">复盘 · 如果重来</div>
+      <textarea placeholder="同样的机会再来一次，你会怎么操作？" onblur="saveField('${t.id}','review',this.value)">${t.review||''}</textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-label">自由笔记</div>
+      <textarea style="min-height:60px" placeholder="其他想法、市场背景、情绪记录……" onblur="saveField('${t.id}','notes',this.value)">${t.notes||''}</textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-label">标签</div>
+      <div class="tags-wrap" id="tags-wrap-${t.id}">${tagHtml}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">评分</div>
+      <div class="rating-row">
+        <div class="rating-item">
+          <span class="rating-label">执行质量</span>
+          <div class="stars">${execStars}</div>
+        </div>
+        <div class="rating-item" style="margin-left:16px">
+          <span class="rating-label">逻辑质量</span>
+          <div class="stars">${logicStars}</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Setup chart upload
+  const fileEl = document.createElement('input');
+  fileEl.type = 'file'; fileEl.accept = 'image/*'; fileEl.style.display = 'none';
+  fileEl.id = 'chart-file-' + t.id;
+  fileEl.onchange = (e) => handleChartUpload(t.id, e);
+  document.body.appendChild(fileEl);
+}
+
+function uploadChart(id) {
+  document.getElementById('chart-file-' + id)?.click();
+}
+function handleChartUpload(id, e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const t = db.trades.find(x => x.id === id);
+    if (t) { t.chartImg = ev.target.result; saveTrade(t); renderDetail(); }
+  };
+  reader.readAsDataURL(file);
+}
+function removeChart(id) {
+  const t = db.trades.find(x => x.id === id);
+  if (t) { t.chartImg = null; saveTrade(t); renderDetail(); }
+}
+
+function saveField(id, field, val) {
+  const t = db.trades.find(x => x.id === id);
+  if (t) { t[field] = val; debounceSave('field_'+id, () => saveTrade(t)); }
+}
+
+function setScore(id, type, val) {
+  const t = db.trades.find(x => x.id === id);
+  if (!t) return;
+  if (type === 'exec') t.execScore = val;
+  else t.logicScore = val;
+  saveTrade(t); renderDetail();
+}
+
+function removeTag(id, tag) {
+  const t = db.trades.find(x => x.id === id);
+  if (!t) return;
+  t.tags = (t.tags||[]).filter(x => x !== tag);
+  saveTrade(t); renderDetail();
+}
+
+function showTagInput(id) {
+  const wrap = document.getElementById('tags-wrap-' + id);
+  const addBtn = wrap.querySelector('.tag-add-btn');
+  if (!addBtn) return;
+  const inp = document.createElement('input');
+  inp.className = 'tag-input'; inp.placeholder = '输入后回车';
+  inp.onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      const val = inp.value.trim();
+      if (val) {
+        const t = db.trades.find(x => x.id === id);
+        if (t) { t.tags = [...(t.tags||[]), val]; saveTrade(t); renderDetail(); }
+      } else { inp.remove(); addBtn.style.display = ''; }
+    }
+    if (e.key === 'Escape') { inp.remove(); addBtn.style.display = ''; }
+  };
+  inp.onblur = () => { inp.remove(); addBtn.style.display = ''; };
+  addBtn.style.display = 'none';
+  wrap.insertBefore(inp, addBtn);
+  inp.focus();
+}
+
+// ─── Modal ────────────────────────────────────────────────────────────────
+function openNewModal() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = '新建交易';
+  ['f-ticker','f-name','f-price-in','f-price-out','f-position','f-pnl'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-dir').value = 'long';
+  document.getElementById('f-market').value = 'A股';
+  document.getElementById('f-date-in').value = new Date().toISOString().slice(0,10);
+  document.getElementById('f-date-out').value = '';
+  document.getElementById('trade-modal').classList.add('open');
+}
+function openEditModal(id) {
+  const t = db.trades.find(x => x.id === id);
+  if (!t) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = '编辑交易';
+  document.getElementById('f-ticker').value = t.ticker || '';
+  document.getElementById('f-name').value = t.name || '';
+  document.getElementById('f-dir').value = t.dir || 'long';
+  document.getElementById('f-market').value = t.market || 'A股';
+  document.getElementById('f-date-in').value = t.dateIn || '';
+  document.getElementById('f-date-out').value = t.dateOut || '';
+  document.getElementById('f-price-in').value = t.priceIn || '';
+  document.getElementById('f-price-out').value = t.priceOut || '';
+  document.getElementById('f-position').value = t.position || '';
+  document.getElementById('f-pnl').value = t.pnl || '';
+  document.getElementById('trade-modal').classList.add('open');
+}
+function closeModal() { document.getElementById('trade-modal').classList.remove('open'); }
+
+function saveTradeModal() {
+  const ticker = document.getElementById('f-ticker').value.trim().toUpperCase();
+  const dateIn = document.getElementById('f-date-in').value;
+  if (!ticker || !dateIn) { showToast('请填写标的代码和买入日期'); return; }
+
+  if (editingId) {
+    const t = db.trades.find(x => x.id === editingId);
+    if (t) {
+      t.ticker = ticker;
+      t.name = document.getElementById('f-name').value.trim();
+      t.dir = document.getElementById('f-dir').value;
+      t.market = document.getElementById('f-market').value;
+      t.dateIn = dateIn;
+      t.dateOut = document.getElementById('f-date-out').value || null;
+      t.priceIn = document.getElementById('f-price-in').value || null;
+      t.priceOut = document.getElementById('f-price-out').value || null;
+      t.position = document.getElementById('f-position').value || null;
+      t.pnl = document.getElementById('f-pnl').value || null;
+      saveTrade(t);
+    }
+  } else {
+    const trade = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+      ticker, name: document.getElementById('f-name').value.trim(),
+      dir: document.getElementById('f-dir').value,
+      market: document.getElementById('f-market').value,
+      dateIn, dateOut: document.getElementById('f-date-out').value || null,
+      priceIn: document.getElementById('f-price-in').value || null,
+      priceOut: document.getElementById('f-price-out').value || null,
+      position: document.getElementById('f-position').value || null,
+      pnl: document.getElementById('f-pnl').value || null,
+      logic: '', errors: '', review: '', notes: '',
+      tags: [], execScore: 0, logicScore: 0, chartImg: null
+    };
+    db.trades.unshift(trade);
+    selectedId = trade.id;
+    saveTrade(trade);
+  }
+  closeModal(); renderSidebar(); renderDetail();
+  showToast(editingId ? '已更新' : '交易已创建');
+}
+
+function deleteTrade(id) {
+  if (!confirm('确认删除这笔交易？')) return;
+  db.trades = db.trades.filter(x => x.id !== id);
+  if (selectedId === id) selectedId = null;
+  deleteTradeSB(id); renderSidebar(); renderDetail();
+  showToast('已删除');
+}
+
+// ─── Stats ────────────────────────────────────────────────────────────────
+function renderStats() {
+  const trades = db.trades;
+  const closed = trades.filter(t => t.pnl !== null && t.pnl !== '');
+  const totalPnl = closed.reduce((s, t) => s + (parseFloat(t.pnl)||0), 0);
+  const wins = closed.filter(t => parseFloat(t.pnl) > 0).length;
+  const winRate = closed.length ? Math.round(wins/closed.length*100) : 0;
+  const avgPnl = closed.length ? (totalPnl / closed.length) : 0;
+
+  // Monthly PnL
+  const monthly = {};
+  closed.forEach(t => {
+    const k = t.dateIn.slice(0,7);
+    monthly[k] = (monthly[k]||0) + (parseFloat(t.pnl)||0);
+  });
+  const mKeys = Object.keys(monthly).sort().slice(-8);
+  const maxAbs = Math.max(...mKeys.map(k => Math.abs(monthly[k])), 1);
+
+  const bars = mKeys.map(k => {
+    const v = monthly[k];
+    const h = Math.max(4, Math.round(Math.abs(v)/maxAbs*80));
+    const ym = k.split('-');
+    const lbl = parseInt(ym[1]) + '月';
+    return `<div class="bar-col">
+      <div class="bar ${v>=0?'pos':'neg'}" style="height:${h}px" title="${v.toLocaleString()}"></div>
+      <span class="bar-label">${lbl}</span>
+    </div>`;
+  }).join('');
+
+  // Tag frequency
+  const tagCount = {};
+  trades.forEach(t => (t.tags||[]).forEach(tag => tagCount[tag] = (tagCount[tag]||0)+1));
+  const topTags = Object.entries(tagCount).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const tagCloud = topTags.map(([tag, cnt]) =>
+    `<span class="tag">${tag} <span style="color:var(--text3)">${cnt}</span></span>`
+  ).join('');
+
+  const pnlClass = totalPnl >= 0 ? 'pos' : 'neg';
+  const totalStr = (totalPnl>=0?'+':'') + totalPnl.toLocaleString('zh-CN',{maximumFractionDigits:0});
+
+  document.getElementById('stats-content').innerHTML = `
+    <div style="font-size:16px;font-weight:600;margin-bottom:18px">总览</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-label">累计盈亏</div>
+        <div class="stat-card-val ${pnlClass}">${totalStr}</div>
+        <div class="stat-card-sub">已平仓 ${closed.length} 笔</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">胜率</div>
+        <div class="stat-card-val">${winRate}%</div>
+        <div class="stat-card-sub">${wins} 盈 / ${closed.length-wins} 亏</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">平均盈亏</div>
+        <div class="stat-card-val ${avgPnl>=0?'pos':'neg'}">${(avgPnl>=0?'+':'') + avgPnl.toLocaleString('zh-CN',{maximumFractionDigits:0})}</div>
+        <div class="stat-card-sub">每笔已平仓</div>
+      </div>
+    </div>
+    ${mKeys.length ? `
+    <div class="chart-bar-wrap">
+      <div class="chart-bar-title">近期月度盈亏</div>
+      <div class="bar-chart">${bars}</div>
+    </div>` : ''}
+    ${topTags.length ? `
+    <div class="chart-bar-wrap">
+      <div class="chart-bar-title">高频标签</div>
+      <div class="tags-wrap" style="margin-top:4px">${tagCloud}</div>
+    </div>` : ''}
+  `;
+}
+
+// ─── System ──────────────────────────────────────────────────────────────
+function renderSystem() {
+  const s = db.system;
+  document.getElementById('system-content').innerHTML = `
+    <div style="font-size:16px;font-weight:600;margin-bottom:4px">交易体系</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:24px">记录你的方法论、规则和原则，供自己定期回顾</div>
+
+    <div class="system-section">
+      <div class="system-title">入场框架</div>
+      <textarea placeholder="什么样的条件你才会买入？技术面、基本面、催化剂……" onblur="saveSystem('entry',this.value)">${s.entry||''}</textarea>
+    </div>
+    <div class="system-section">
+      <div class="system-title">出场框架</div>
+      <textarea placeholder="止盈标准、止损条件、逻辑失效信号……" onblur="saveSystem('exit',this.value)">${s.exit||''}</textarea>
+    </div>
+    <div class="system-section">
+      <div class="system-title">风险管理</div>
+      <textarea placeholder="单笔最大仓位、最大回撤容忍、相关性控制……" onblur="saveSystem('risk',this.value)">${s.risk||''}</textarea>
+    </div>
+    <div class="system-section">
+      <div class="system-title">心理与纪律</div>
+      <textarea placeholder="你最容易犯的错误、FOMO 的应对方式、情绪管理……" onblur="saveSystem('mindset',this.value)">${s.mindset||''}</textarea>
+    </div>
+  `;
+}
+
+function saveSystem(field, val) {
+  db.system[field] = val;
+  debounceSave('system', () => saveSystemSB());
+}
+
+// ─── Import / Export ─────────────────────────────────────────────────────
+function exportData() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'trade-journal-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click(); URL.revokeObjectURL(a.href);
+  showToast('已导出 JSON');
+}
+
+async function importData(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if (!imported.trades) throw new Error('格式错误');
+      if (!confirm(`导入将合并 ${imported.trades.length} 条记录（不覆盖现有数据）。继续？`)) return;
+      const existingIds = new Set(db.trades.map(t => t.id));
+      const newTrades = imported.trades.filter(t => !existingIds.has(t.id));
+      newTrades.forEach(t => db.trades.push(t));
+      if (imported.system) db.system = { ...db.system, ...imported.system };
+      const existingWIds = new Set(db.watchlist.map(w => w.id));
+      const newWatch = (imported.watchlist||[]).filter(w => !existingWIds.has(w.id));
+      newWatch.forEach(w => db.watchlist.push(w));
+      // Push all new items to Supabase
+      showToast('上传中…');
+      await Promise.all([
+        ...newTrades.map(t => saveTrade(t)),
+        ...newWatch.map(w => saveWatchItem(w)),
+        saveSystemSB()
+      ]);
+      renderSidebar();
+      showToast('导入完成');
+    } catch(err) { showToast('文件格式有误，请检查'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ─── Watchlist ────────────────────────────────────────────────────────────
+let selectedWatchId = null;
+let editingWatchId = null;
+let pendingTlImg = null;
+let selectedColorIdx = 0;
+
+const SENT_LABELS = { bull: '看多', bear: '看空', neut: '中性', wait: '观望' };
+const SENT_CLASSES = { bull: 'sent-bull', bear: 'sent-bear', neut: 'sent-neut', wait: 'sent-wait' };
+
+const SECTOR_COLORS = [
+  { idx:0, label:'蓝' }, { idx:1, label:'黄' }, { idx:2, label:'绿' },
+  { idx:3, label:'粉' }, { idx:4, label:'天' }, { idx:5, label:'红' },
+  { idx:6, label:'紫' }, { idx:7, label:'薄' }, { idx:8, label:'橙' }, { idx:9, label:'草' }
+];
+
+// Map same sector name → same color automatically
+const _sectorColorMap = {};
+function getSectorColorIdx(sector, explicitIdx) {
+  if (explicitIdx !== undefined && explicitIdx !== null) return explicitIdx;
+  if (!sector) return 0;
+  if (_sectorColorMap[sector] === undefined) {
+    _sectorColorMap[sector] = Object.keys(_sectorColorMap).length % 10;
+  }
+  return _sectorColorMap[sector];
+}
+
+function sectorBadgeHtml(sector, colorIdx) {
+  const ci = getSectorColorIdx(sector, colorIdx);
+  return `<span class="watch-sector-badge sc-${ci}" style="border:1px solid">${sector}</span>`;
+}
+
+function renderWatchSidebar() {
+  const q = (document.getElementById('watch-search')?.value || '').toLowerCase();
+  const list = (db.watchlist || []).filter(w =>
+    !q || w.ticker.toLowerCase().includes(q) || (w.name||'').toLowerCase().includes(q) || (w.sector||'').toLowerCase().includes(q)
+  );
+  const el = document.getElementById('watch-sidebar-list');
+  if (!list.length) {
+    el.innerHTML = '<div style="padding:16px 14px;font-size:12px;color:var(--text3)">暂无跟踪对象</div>';
+    return;
+  }
+  const groups = {};
+  list.forEach(w => {
+    const k = w.sector || '未分类';
+    if (!groups[k]) groups[k] = [];
+    groups[k].push(w);
+  });
+  el.innerHTML = Object.entries(groups).map(([sector, items]) => {
+    const ci = getSectorColorIdx(sector, items[0]?.colorIdx);
+    const groupLabel = sector !== '未分类'
+      ? `<div class="watch-group-label" style="padding:10px 12px 4px">
+           <span class="sc-${ci}" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;border:1px solid;letter-spacing:0.02em">${sector}</span>
+         </div>`
+      : `<div class="watch-group-label">未分类</div>`;
+    const rows = items.map(w => `
+      <div class="watch-row${w.id === selectedWatchId ? ' active' : ''}" onclick="selectWatch('${w.id}')">
+        <div class="watch-row-left">
+          <span class="watch-ticker">${w.ticker}</span>
+          ${w.name ? `<div class="watch-name">${w.name}</div>` : ''}
+        </div>
+        <span class="watch-sentiment ${SENT_CLASSES[w.sentiment||'wait']}">${SENT_LABELS[w.sentiment||'wait']}</span>
+      </div>`).join('');
+    return groupLabel + rows;
+  }).join('');
+}
+
+function selectWatch(id) {
+  selectedWatchId = id;
+  pendingTlImg = null;
+  renderWatchSidebar();
+  renderWatchDetail();
+}
+
+// ── Record type & logic state labels ──
+const TL_TYPES = {
+  market:      { label:'行情观察', cls:'tl-type-market' },
+  fundamental: { label:'基本面',   cls:'tl-type-fundamental' },
+  sentiment:   { label:'情绪面',   cls:'tl-type-sentiment' },
+  policy:      { label:'政策消息', cls:'tl-type-policy' },
+  logic:       { label:'逻辑变化', cls:'tl-type-logic' }
+};
+const LOGIC_STATES = {
+  same:     { label:'逻辑未变', cls:'tl-logic-same' },
+  stronger: { label:'逻辑强化', cls:'tl-logic-stronger' },
+  weaker:   { label:'逻辑弱化', cls:'tl-logic-weaker' },
+  broken:   { label:'逻辑失效', cls:'tl-logic-broken' }
+};
+const ACTION_STATES = {
+  none:   { label:'无操作意向', cls:'tl-action-tag' },
+  buy:    { label:'考虑买入',   cls:'tl-action-tag tl-action-buy' },
+  reduce: { label:'考虑减仓',   cls:'tl-action-tag tl-action-reduce' },
+  traded: { label:'已操作',     cls:'tl-action-tag tl-action-traded' }
+};
+
+function renderWatchDetail() {
+  const el = document.getElementById('watch-detail');
+  const w = (db.watchlist||[]).find(x => x.id === selectedWatchId);
+  if (!w) {
+    el.innerHTML = `<div class="watch-empty">
+      <div style="font-size:32px">🔭</div>
+      <p style="font-weight:500;color:var(--text2)">还没有跟踪对象</p>
+      <p>点击左上角「＋」添加板块或个股</p>
+    </div>`;
+    return;
+  }
+  const ci = getSectorColorIdx(w.sector, w.colorIdx);
+  const sentBtns = ['bull','bear','neut','wait'].map(s =>
+    `<button class="sent-btn${(w.sentiment||'wait')===s?' active-'+s:''}" onclick="setWatchSentiment('${w.id}','${s}')">${SENT_LABELS[s]}</button>`
+  ).join('');
+
+  // Info strip chips
+  const sentChip = `<div class="info-chip"><span class="info-chip-label">观点</span><span class="sent-btn active-${w.sentiment||'wait'}" style="padding:2px 8px;font-size:11px;cursor:default">${SENT_LABELS[w.sentiment||'wait']}</span></div>`;
+  const targetChip = w.target ? `<div class="info-chip"><span class="info-chip-label">目标价</span><span class="info-chip-val amber">${w.target}</span></div>` : '';
+  const countChip = `<div class="info-chip"><span class="info-chip-label">记录</span><span class="info-chip-val">${(w.timeline||[]).length} 条</span></div>`;
+  const marketChip = `<div class="info-chip"><span class="info-chip-val" style="color:var(--text2)">${w.market||'A股'}</span></div>`;
+
+  // Foundation blocks
+  const thesisBlock = (w.thesis||w.catalyst||w.invalidation) ? `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px">
+      <div style="padding:8px 14px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:11px;font-weight:600;color:var(--text2)">核心分析框架</span>
+        <button class="icon-btn" style="width:24px;height:24px;font-size:12px" onclick="openWatchModal('${w.id}')">✎</button>
+      </div>
+      ${w.thesis ? `<div style="padding:10px 14px;border-bottom:1px solid var(--border)"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">核心逻辑</div><div style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap">${escHtml(w.thesis)}</div></div>` : ''}
+      <div style="display:grid;grid-template-columns:1fr 1fr">
+        ${w.catalyst ? `<div style="padding:10px 14px;border-right:1px solid var(--border)"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">关键催化剂</div><div style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap">${escHtml(w.catalyst)}</div></div>` : '<div></div>'}
+        ${w.invalidation ? `<div style="padding:10px 14px"><div style="font-size:11px;color:var(--red);margin-bottom:4px">逻辑失效条件</div><div style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap">${escHtml(w.invalidation)}</div></div>` : ''}
+      </div>
+    </div>` : `<div style="margin-bottom:16px;padding:10px 12px;border:1px dashed var(--border);border-radius:var(--radius);font-size:12px;color:var(--text3);cursor:pointer" onclick="openWatchModal('${w.id}')">＋ 填写核心逻辑、催化剂、失效条件（点击编辑）</div>`;
+
+  // Timeline items
+  const tlItems = (w.timeline||[]).slice().reverse().map((entry, ri) => {
+    const realIdx = (w.timeline.length - 1) - ri;
+    const typeInfo = TL_TYPES[entry.type] || TL_TYPES.market;
+    const logicInfo = LOGIC_STATES[entry.logicState] || LOGIC_STATES.same;
+    const actionInfo = ACTION_STATES[entry.action] || ACTION_STATES.none;
+    const dotClass = 'tl-dot' + (entry.img ? ' has-img' : '') + (entry.logicState === 'broken' ? ' has-img' : '');
+    const imgBlock = entry.img
+      ? `<div class="tl-img"><img src="${entry.img}" alt="截图"><div class="tl-img-actions"><span class="tl-img-remove" onclick="removeTlImg('${w.id}',${realIdx})">移除图片</span></div></div>`
+      : `<button class="img-upload-btn" style="margin-top:6px" onclick="uploadTlImg('${w.id}',${realIdx})">＋ 上传截图</button>`;
+    return `<div class="tl-item">
+      <div class="tl-spine"><div class="${dotClass}"></div>${ri < (w.timeline.length-1) ? '<div class="tl-line"></div>' : ''}</div>
+      <div class="tl-body">
+        <div class="tl-meta">
+          <span class="tl-date">${entry.date}</span>
+          ${entry.img ? '<span class="tl-img-badge">📷</span>' : ''}
+          <span class="tl-delete" onclick="deleteTlEntry('${w.id}',${realIdx})">删除</span>
+        </div>
+        <div class="tl-structured">
+          <div class="tl-structured-meta">
+            <span class="tl-type-badge ${typeInfo.cls}">${typeInfo.label}</span>
+            <span class="tl-logic-tag ${logicInfo.cls}">${logicInfo.label}</span>
+            ${entry.action !== 'none' ? `<span class="${actionInfo.cls}">${actionInfo.label}</span>` : ''}
+          </div>
+          <div class="tl-structured-body">${escHtml(entry.text)}</div>
+        </div>
+        ${imgBlock}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Compose form
+  const pendingImgHtml = pendingTlImg
+    ? `<div style="position:relative;display:inline-block"><img src="${pendingTlImg}" style="max-height:72px;border-radius:6px;border:1px solid var(--border)"><span style="position:absolute;top:2px;right:2px;background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-size:11px;cursor:pointer;color:var(--text2)" onclick="pendingTlImg=null;renderWatchDetail()">✕</span></div>`
+    : `<button class="img-upload-btn" onclick="uploadPendingImg('${w.id}')">📷 附图</button>`;
+
+  el.innerHTML = `<div class="watch-entry-wrap">
+    <div class="watch-header">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <span class="watch-ticker-big">${w.ticker}</span>
+          ${w.name ? `<span style="font-size:15px;color:var(--text2);font-weight:500">${w.name}</span>` : ''}
+          ${w.sector ? sectorBadgeHtml(w.sector, w.colorIdx) : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="icon-btn" title="编辑" onclick="openWatchModal('${w.id}')">✎</button>
+        <button class="icon-btn" title="删除" onclick="deleteWatch('${w.id}')">🗑</button>
+      </div>
+    </div>
+
+    <div class="watch-info-strip">
+      ${sentChip}${targetChip}${marketChip}${countChip}
+      <div style="flex:1"></div>
+      <div class="sent-selector" style="margin-bottom:0">${sentBtns}</div>
+    </div>
+
+    ${thesisBlock}
+
+    <div class="section-label" style="margin-bottom:10px">添加分析记录</div>
+    <div class="compose-form">
+      <div class="compose-selectors">
+        <select class="compose-sel" id="tl-type-${w.id}">
+          <option value="market">行情观察</option>
+          <option value="fundamental">基本面</option>
+          <option value="sentiment">情绪面</option>
+          <option value="policy">政策消息</option>
+          <option value="logic">逻辑变化</option>
+        </select>
+        <select class="compose-sel" id="tl-logic-${w.id}">
+          <option value="same">逻辑未变</option>
+          <option value="stronger">逻辑强化</option>
+          <option value="weaker">逻辑弱化</option>
+          <option value="broken">逻辑失效</option>
+        </select>
+        <select class="compose-sel" id="tl-action-${w.id}">
+          <option value="none">无操作意向</option>
+          <option value="buy">考虑买入</option>
+          <option value="reduce">考虑减仓</option>
+          <option value="traded">已操作</option>
+        </select>
+      </div>
+      <div class="compose-body">
+        <textarea id="tl-input-${w.id}" placeholder="写下今天的分析、行情观察、逻辑变化……"></textarea>
+      </div>
+      <div class="compose-footer">
+        <div style="display:flex;align-items:center;gap:8px">${pendingImgHtml}</div>
+        <button class="timeline-submit" onclick="addTlEntry('${w.id}')">记录</button>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-bottom:12px">分析时间线</div>
+    <div class="timeline">
+      ${tlItems || '<div style="font-size:13px;color:var(--text3);padding:8px 0">还没有记录，写下第一条分析吧</div>'}
+    </div>
+  </div>`;
+
+  let fi = document.getElementById('pending-img-input-' + w.id);
+  if (!fi) {
+    fi = document.createElement('input');
+    fi.type = 'file'; fi.accept = 'image/*'; fi.style.display = 'none';
+    fi.id = 'pending-img-input-' + w.id;
+    fi.onchange = (e) => handlePendingImg(w.id, e);
+    document.body.appendChild(fi);
+  }
+}
+
+function escHtml(str) {
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function setWatchSentiment(id, s) {
+  const w = db.watchlist.find(x => x.id === id);
+  if (w) { w.sentiment = s; saveWatchItem(w); renderWatchSidebar(); renderWatchDetail(); }
+}
+
+function addTlEntry(id) {
+  const inp = document.getElementById('tl-input-' + id);
+  const text = (inp?.value || '').trim();
+  if (!text) { showToast('请先写点什么'); return; }
+  const w = db.watchlist.find(x => x.id === id);
+  if (!w) return;
+  if (!w.timeline) w.timeline = [];
+  w.timeline.push({
+    id: Date.now().toString(36),
+    date: new Date().toLocaleDateString('zh-CN', {year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-'),
+    text,
+    type: document.getElementById('tl-type-' + id)?.value || 'market',
+    logicState: document.getElementById('tl-logic-' + id)?.value || 'same',
+    action: document.getElementById('tl-action-' + id)?.value || 'none',
+    img: pendingTlImg || null
+  });
+  pendingTlImg = null;
+  saveWatchItem(w); renderWatchSidebar(); renderWatchDetail();
+  showToast('已记录');
+}
+
+function deleteTlEntry(watchId, idx) {
+  if (!confirm('删除这条记录？')) return;
+  const w = db.watchlist.find(x => x.id === watchId);
+  if (w) { w.timeline.splice(idx, 1); saveWatchItem(w); renderWatchDetail(); }
+}
+
+function uploadTlImg(watchId, idx) {
+  const fi = document.createElement('input');
+  fi.type = 'file'; fi.accept = 'image/*';
+  fi.onchange = (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const w = db.watchlist.find(x => x.id === watchId);
+      if (w && w.timeline[idx]) { w.timeline[idx].img = ev.target.result; saveWatchItem(w); renderWatchDetail(); }
+    };
+    reader.readAsDataURL(file);
+  };
+  fi.click();
+}
+
+function removeTlImg(watchId, idx) {
+  const w = db.watchlist.find(x => x.id === watchId);
+  if (w && w.timeline[idx]) { w.timeline[idx].img = null; saveWatchItem(w); renderWatchDetail(); }
+}
+
+function uploadPendingImg(watchId) {
+  document.getElementById('pending-img-input-' + watchId)?.click();
+}
+
+function handlePendingImg(watchId, e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => { pendingTlImg = ev.target.result; renderWatchDetail(); };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+// ── Color picker for modal ──
+function buildColorSwatches(currentIdx) {
+  const wrap = document.getElementById('color-swatches');
+  if (!wrap) return;
+  wrap.innerHTML = SECTOR_COLORS.map(c =>
+    `<div onclick="selectColor(${c.idx})" title="${c.label}"
+      style="width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid ${currentIdx===c.idx?'var(--text)':'transparent'}"
+      class="sc-${c.idx}" id="swatch-${c.idx}"></div>`
+  ).join('');
+}
+
+function selectColor(idx) {
+  selectedColorIdx = idx;
+  buildColorSwatches(idx);
+  updateSectorPreview();
+}
+
+function updateSectorPreview() {
+  const sec = (document.getElementById('wf-sector')?.value || '').trim() || '板块名称';
+  const prev = document.getElementById('sector-preview');
+  if (prev) {
+    prev.textContent = sec;
+    prev.className = `sc-${selectedColorIdx}`;
+    prev.style.cssText = 'font-size:12px;padding:3px 10px;border-radius:4px;border:1px solid';
+  }
+}
+
+// Watchlist modal
+function openWatchModal(id) {
+  editingWatchId = id || null;
+  document.getElementById('watch-modal-title').textContent = id ? '编辑跟踪对象' : '新增跟踪对象';
+  if (id) {
+    const w = db.watchlist.find(x => x.id === id);
+    document.getElementById('wf-ticker').value = w.ticker || '';
+    document.getElementById('wf-name').value = w.name || '';
+    document.getElementById('wf-sector').value = w.sector || '';
+    document.getElementById('wf-market').value = w.market || 'A股';
+    document.getElementById('wf-target').value = w.target || '';
+    document.getElementById('wf-sentiment').value = w.sentiment || 'wait';
+    document.getElementById('wf-thesis').value = w.thesis || '';
+    document.getElementById('wf-catalyst').value = w.catalyst || '';
+    document.getElementById('wf-invalidation').value = w.invalidation || '';
+    selectedColorIdx = w.colorIdx ?? getSectorColorIdx(w.sector, w.colorIdx);
+  } else {
+    ['wf-ticker','wf-name','wf-sector','wf-target','wf-thesis','wf-catalyst','wf-invalidation'].forEach(i => { const el = document.getElementById(i); if(el) el.value=''; });
+    document.getElementById('wf-market').value = 'A股';
+    document.getElementById('wf-sentiment').value = 'wait';
+    selectedColorIdx = Object.keys(_sectorColorMap).length % 10;
+  }
+  buildColorSwatches(selectedColorIdx);
+  updateSectorPreview();
+  document.getElementById('watch-modal').classList.add('open');
+}
+
+function closeWatchModal() { document.getElementById('watch-modal').classList.remove('open'); }
+
+function saveWatch() {
+  const ticker = document.getElementById('wf-ticker').value.trim();
+  if (!ticker) { showToast('请填写代码或名称'); return; }
+  const sector = document.getElementById('wf-sector').value.trim();
+  if (sector && _sectorColorMap[sector] === undefined) _sectorColorMap[sector] = selectedColorIdx;
+  const fields = {
+    ticker, name: document.getElementById('wf-name').value.trim(),
+    sector, market: document.getElementById('wf-market').value,
+    target: document.getElementById('wf-target').value.trim(),
+    sentiment: document.getElementById('wf-sentiment').value,
+    colorIdx: selectedColorIdx,
+    thesis: document.getElementById('wf-thesis').value.trim(),
+    catalyst: document.getElementById('wf-catalyst').value.trim(),
+    invalidation: document.getElementById('wf-invalidation').value.trim()
+  };
+  if (editingWatchId) {
+    const w = db.watchlist.find(x => x.id === editingWatchId);
+    if (w) Object.assign(w, fields);
+    saveWatchItem(w);
+  } else {
+    const w = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,5), ...fields, timeline: [] };
+    db.watchlist.push(w);
+    selectedWatchId = w.id;
+    saveWatchItem(w);
+  }
+  closeWatchModal(); renderWatchSidebar(); renderWatchDetail();
+  showToast(editingWatchId ? '已更新' : '跟踪对象已添加');
+}
+
+function deleteWatch(id) {
+  if (!confirm('删除该跟踪对象及所有记录？')) return;
+  db.watchlist = db.watchlist.filter(x => x.id !== id);
+  if (selectedWatchId === id) selectedWatchId = db.watchlist[0]?.id || null;
+  deleteWatchSB(id); renderWatchSidebar(); renderWatchDetail();
+  showToast('已删除');
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────
+async function bootApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  await loadDB();
+  renderSidebar();
+  if (db.trades.length) { selectedId = db.trades[0].id; renderDetail(); }
+}
+
+// Auto-restore session on load
+(async () => {
+  const ok = await tryRestoreSession();
+  if (ok) await bootApp();
+})();
+</script>
+</body>
+</html>
