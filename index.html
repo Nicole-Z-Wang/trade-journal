@@ -209,6 +209,63 @@
   /* File input hidden */
   #file-import { display: none; }
 
+  /* ── Position-based trade journal ─────────────────────────── */
+  .sidebar-status-section { border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+  .sidebar-status-section:last-child { border-bottom: none; }
+  .sidebar-status-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 8px; }
+  .pos-row { display: flex; flex-direction: column; gap: 1px; padding: 6px 8px; border-radius: 6px; cursor: pointer; transition: background 0.1s; }
+  .pos-row:hover { background: var(--surface2); }
+  .pos-row.active { background: var(--surface2); }
+  .pos-row-top { display: flex; align-items: center; gap: 6px; }
+  .pos-row-ticker { font-size: 13px; font-weight: 600; font-family: var(--mono); color: var(--text); flex-shrink: 0; }
+  .pos-row-name { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+  .pos-status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .pos-status-dot.closed { background: var(--text3); }
+  .pos-row-bottom { display: flex; align-items: center; gap: 6px; padding-left: 0; font-size: 11px; color: var(--text3); }
+  .closed-badge { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+  .open-badge { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: var(--green-bg); color: var(--green); font-weight: 500; }
+
+  /* Position summary strip */
+  .pos-summary-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 20px; }
+
+  /* Ops compose form */
+  .op-compose { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 22px; overflow: hidden; }
+  .op-compose-row { display: flex; gap: 8px; padding: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .op-field { display: flex; flex-direction: column; gap: 4px; }
+  .op-field label { font-size: 11px; color: var(--text3); }
+  .op-field input, .op-field select { padding: 6px 9px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--surface2); color: var(--text); font-family: var(--font); font-size: 12px; outline: none; }
+  .op-field input:focus, .op-field select:focus { border-color: var(--text); }
+  .op-dir-toggle { display: flex; border: 1px solid var(--border-strong); border-radius: 6px; overflow: hidden; }
+  .op-dir-btn { padding: 6px 14px; font-size: 12px; cursor: pointer; background: var(--surface2); color: var(--text2); border: none; font-family: var(--font); }
+  .op-dir-btn.sel-buy { background: var(--green-bg); color: var(--green); font-weight: 600; }
+  .op-dir-btn.sel-sell { background: var(--red-bg); color: var(--red); font-weight: 600; }
+  .op-compose-logic { padding: 0 12px 12px; }
+  .op-compose-logic textarea { min-height: 56px; font-size: 13px; }
+  .op-compose-footer { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-top: 1px solid var(--border); background: var(--surface2); }
+  .op-submit-btn { padding: 7px 16px; border-radius: 6px; border: none; background: var(--text); color: var(--bg); font-size: 12px; font-family: var(--font); cursor: pointer; font-weight: 500; }
+  .op-submit-btn:hover { opacity: 0.85; }
+
+  /* Ops list (the timeline of buy/sell actions) */
+  .op-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .op-card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
+  .op-card-head { display: flex; align-items: center; gap: 8px; padding: 9px 12px; }
+  .op-action-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+  .op-action-buy { background: var(--green-bg); color: var(--green); }
+  .op-action-sell { background: var(--red-bg); color: var(--red); }
+  .op-card-shares { font-size: 13px; font-weight: 600; font-family: var(--mono); color: var(--text); }
+  .op-card-price { font-size: 13px; color: var(--text2); font-family: var(--mono); }
+  .op-card-date { font-size: 11px; color: var(--text3); margin-left: auto; }
+  .op-card-delete { font-size: 11px; color: var(--text3); cursor: pointer; opacity: 0; transition: opacity 0.15s; }
+  .op-card:hover .op-card-delete { opacity: 1; }
+  .op-card-body { padding: 0 12px 12px; }
+  .op-card-logic { font-size: 13px; color: var(--text); line-height: 1.65; white-space: pre-wrap; background: var(--surface2); border-radius: 6px; padding: 8px 10px; margin-top: 2px; }
+  .op-card-logic-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .op-card-chart-wrap { margin-top: 8px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); position: relative; }
+  .op-card-chart-wrap img { width: 100%; max-height: 220px; object-fit: contain; display: block; background: var(--surface2); }
+  .op-card-chart-remove { position: absolute; top: 6px; right: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; font-size: 11px; cursor: pointer; color: var(--text2); }
+  .op-card-chart-upload { margin-top: 8px; padding: 5px 10px; border-radius: 6px; border: 1px dashed var(--border-strong); background: transparent; color: var(--text3); font-size: 12px; font-family: var(--font); cursor: pointer; }
+  .op-card-chart-upload:hover { color: var(--text); border-color: var(--text); }
+
   /* ── Sector color palette ───────────────────────────────────── */
   .sc-0 { background:#E8EEFF; color:#3D52B0; border-color:#C5CFFB; }
   .sc-1 { background:#FEF9E0; color:#8A6200; border-color:#F5DC80; }
@@ -362,7 +419,7 @@
     <button class="btn" onclick="exportData()">导出 JSON</button>
     <button class="btn" onclick="document.getElementById('file-import').click()">导入 JSON</button>
     <input type="file" id="file-import" accept=".json" onchange="importData(event)">
-    <button class="btn btn-primary" onclick="openNewModal()">＋ 新建交易</button>
+    <button class="btn btn-primary" onclick="openNewModal()">＋ 新建标的</button>
     <button class="btn" onclick="logout()" title="退出登录" style="padding:6px 8px">⏻</button>
   </div>
 </div>
@@ -381,7 +438,7 @@
     <div class="empty-state" id="empty-state">
       <div style="font-size:32px">📒</div>
       <p style="font-weight:500;color:var(--text2)">还没有交易记录</p>
-      <p>点击右上角「新建交易」开始记录</p>
+      <p>点击右上角「新建标的」开始记录</p>
     </div>
     <div class="entry-wrap" id="entry-detail" style="display:none"></div>
   </div>
@@ -414,10 +471,10 @@
   </div>
 </div>
 
-<!-- New/Edit Trade Modal -->
+<!-- New Position Modal -->
 <div class="modal-overlay" id="trade-modal">
   <div class="modal">
-    <div class="modal-title" id="modal-title">新建交易</div>
+    <div class="modal-title">新建标的</div>
     <div class="form-grid">
       <div class="form-row">
         <label class="form-label">标的代码 *</label>
@@ -428,51 +485,28 @@
         <input class="form-input" id="f-name" placeholder="如 贵州茅台">
       </div>
     </div>
-    <div class="form-grid">
-      <div class="form-row">
-        <label class="form-label">方向 *</label>
-        <select class="form-input" id="f-dir">
-          <option value="long">多头（买入）</option>
-          <option value="short">空头（卖出）</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label class="form-label">市场</label>
-        <select class="form-input" id="f-market">
-          <option value="A股">A股</option>
-          <option value="港股">港股</option>
-        </select>
-      </div>
+    <div class="form-row">
+      <label class="form-label">市场</label>
+      <select class="form-input" id="f-market">
+        <option value="A股">A股</option>
+        <option value="港股">港股</option>
+      </select>
     </div>
+    <div style="border-top:1px solid var(--border);margin:14px 0;"></div>
+    <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px">首次买入</div>
     <div class="form-grid">
       <div class="form-row">
         <label class="form-label">买入日期 *</label>
         <input class="form-input" id="f-date-in" type="date">
       </div>
       <div class="form-row">
-        <label class="form-label">卖出日期</label>
-        <input class="form-input" id="f-date-out" type="date">
-      </div>
-    </div>
-    <div class="form-grid">
-      <div class="form-row">
         <label class="form-label">买入价 *</label>
         <input class="form-input" id="f-price-in" type="number" step="0.01" placeholder="0.00">
       </div>
-      <div class="form-row">
-        <label class="form-label">卖出价</label>
-        <input class="form-input" id="f-price-out" type="number" step="0.01" placeholder="0.00">
-      </div>
     </div>
-    <div class="form-grid">
-      <div class="form-row">
-        <label class="form-label">仓位比例 (%)</label>
-        <input class="form-input" id="f-position" type="number" step="1" min="1" max="100" placeholder="如 15">
-      </div>
-      <div class="form-row">
-        <label class="form-label">盈亏金额（元/港元）</label>
-        <input class="form-input" id="f-pnl" type="number" step="0.01" placeholder="正数盈利，负数亏损">
-      </div>
+    <div class="form-row">
+      <label class="form-label">买入股数 *</label>
+      <input class="form-input" id="f-shares-in" type="number" step="1" placeholder="如 500">
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal()">取消</button>
@@ -789,58 +823,114 @@ function switchView(v) {
 }
 
 // ─── Sidebar ─────────────────────────────────────────────────────────────
+// ── Position computation helpers ──
+function computePosition(t) {
+  // t.ops: [{action:'buy'/'sell', date, price, shares, logic, chartImg, id}]
+  const ops = (t.ops || []).slice().sort((a,b) => a.date.localeCompare(b.date));
+  let totalShares = 0, totalCost = 0, realizedPnl = 0, avgCost = 0;
+  ops.forEach(op => {
+    const shares = parseFloat(op.shares) || 0;
+    const price = parseFloat(op.price) || 0;
+    if (op.action === 'buy') {
+      totalCost += shares * price;
+      totalShares += shares;
+      avgCost = totalShares > 0 ? totalCost / totalShares : 0;
+    } else {
+      realizedPnl += (price - avgCost) * shares;
+      totalCost -= avgCost * shares;
+      totalShares -= shares;
+      if (totalShares < 0.0001) { totalShares = 0; totalCost = 0; }
+    }
+  });
+  const firstDate = ops.length ? ops[0].date : null;
+  const lastDate = ops.length ? ops[ops.length-1].date : null;
+  return {
+    ops, totalShares, avgCost,
+    realizedPnl,
+    isClosed: ops.length > 0 && totalShares <= 0.0001,
+    firstDate, lastDate
+  };
+}
+
 function renderSidebar() {
   const q = (document.getElementById('search-input').value || '').toLowerCase();
   const trades = db.trades.filter(t =>
     !q || t.ticker.toLowerCase().includes(q) || (t.name||'').toLowerCase().includes(q)
   );
 
-  // Group by year-month
-  const groups = {};
-  trades.forEach(t => {
-    const key = t.dateIn.slice(0, 7);
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(t);
-  });
-  const sortedKeys = Object.keys(groups).sort((a,b) => b.localeCompare(a));
-
   const el = document.getElementById('sidebar-list');
-  if (!sortedKeys.length) {
+  if (!trades.length) {
     el.innerHTML = '<div style="padding:16px 14px;font-size:12px;color:var(--text3)">暂无记录</div>';
     return;
   }
 
-  el.innerHTML = sortedKeys.map(key => {
-    const list = groups[key].sort((a,b) => b.dateIn.localeCompare(a.dateIn));
-    const totalPnl = list.reduce((s, t) => s + (parseFloat(t.pnl) || 0), 0);
-    const pnlClass = totalPnl > 0 ? 'pos' : totalPnl < 0 ? 'neg' : 'neutral';
-    const pnlText = totalPnl === 0 ? '—' : (totalPnl > 0 ? '+' : '') + totalPnl.toLocaleString('zh-CN', {maximumFractionDigits: 0});
-    const ym = key.split('-');
-    const label = ym[0] + '年' + parseInt(ym[1]) + '月';
+  const withPos = trades.map(t => ({ t, pos: computePosition(t) }));
+  const openList = withPos.filter(x => !x.pos.isClosed);
+  const closedList = withPos.filter(x => x.pos.isClosed);
 
-    const rows = list.map(t => {
-      const pnl = parseFloat(t.pnl);
-      const pnlMini = isNaN(pnl) ? '' : `<span class="trade-pnl-mini ${pnl>=0?'pos':'neg'}">${pnl>0?'+':''}${pnl.toLocaleString('zh-CN',{maximumFractionDigits:0})}</span>`;
-      const d = t.dateIn.slice(5).replace('-', '/');
-      return `<div class="trade-row${t.id===selectedId?' active':''}" onclick="selectTrade('${t.id}')">
-        <span class="trade-ticker">${t.ticker}</span>
-        <span class="trade-date-label">${d}</span>
-        <span class="dir-badge ${t.dir==='long'?'dir-long':'dir-short'}">${t.dir==='long'?'多':'空'}</span>
-        ${pnlMini}
+  function renderMonthGroups(items) {
+    const groups = {};
+    items.forEach(({t, pos}) => {
+      const key = (pos.firstDate || '0000-00').slice(0, 7);
+      if (!groups[key]) groups[key] = [];
+      groups[key].push({ t, pos });
+    });
+    const sortedKeys = Object.keys(groups).sort((a,b) => b.localeCompare(a));
+    return sortedKeys.map(key => {
+      const list = groups[key].sort((a,b) => (b.pos.lastDate||'').localeCompare(a.pos.lastDate||''));
+      const totalPnl = list.reduce((s, {pos}) => s + pos.realizedPnl, 0);
+      const pnlClass = totalPnl > 0 ? 'pos' : totalPnl < 0 ? 'neg' : 'neutral';
+      const pnlText = Math.abs(totalPnl) < 0.01 ? '—' : (totalPnl > 0 ? '+' : '') + totalPnl.toLocaleString('zh-CN', {maximumFractionDigits: 0});
+      const ym = key.split('-');
+      const label = ym[0] === '0000' ? '未记录日期' : (ym[0] + '年' + parseInt(ym[1]) + '月');
+
+      const rows = list.map(({t, pos}) => {
+        const pnlMini = pos.isClosed
+          ? `<span class="trade-pnl-mini ${pos.realizedPnl>=0?'pos':'neg'}">${pos.realizedPnl>0?'+':''}${pos.realizedPnl.toLocaleString('zh-CN',{maximumFractionDigits:0})}</span>`
+          : `<span style="font-size:11px;color:var(--text3)">${pos.totalShares}股</span>`;
+        return `<div class="pos-row${t.id===selectedId?' active':''}" onclick="selectTrade('${t.id}')">
+          <div class="pos-row-top">
+            <span class="pos-status-dot${pos.isClosed?' closed':''}"></span>
+            <span class="pos-row-ticker">${t.ticker}</span>
+            ${t.name ? `<span class="pos-row-name">${t.name}</span>` : ''}
+            ${pnlMini}
+          </div>
+          <div class="pos-row-bottom">
+            <span>${pos.ops.length}次操作</span>
+          </div>
+        </div>`;
+      }).join('');
+
+      return `<div class="month-group">
+        <div class="month-header">
+          <span class="month-name">${label}</span>
+          <div class="month-meta">
+            <span class="pnl-badge ${pnlClass}">${pnlText}</span>
+            <span style="font-size:11px;color:var(--text3)">${list.length}个标的</span>
+          </div>
+        </div>
+        <div class="trade-list">${rows}</div>
       </div>`;
     }).join('');
+  }
 
-    return `<div class="month-group">
-      <div class="month-header">
-        <span class="month-name">${label}</span>
-        <div class="month-meta">
-          <span class="pnl-badge ${pnlClass}">${pnlText}</span>
-          <span style="font-size:11px;color:var(--text3)">${list.length}笔</span>
-        </div>
-      </div>
-      <div class="trade-list">${rows}</div>
-    </div>`;
-  }).join('');
+  const openSection = `<div class="sidebar-status-section">
+    <div class="sidebar-status-header">
+      <span class="open-badge" style="font-size:11px">持仓中</span>
+      <span style="font-size:11px;color:var(--text3)">${openList.length}个</span>
+    </div>
+    ${openList.length ? renderMonthGroups(openList) : '<div style="padding:8px 14px;font-size:12px;color:var(--text3)">暂无持仓中标的</div>'}
+  </div>`;
+
+  const closedSection = `<div class="sidebar-status-section">
+    <div class="sidebar-status-header">
+      <span class="closed-badge" style="font-size:11px">已清仓</span>
+      <span style="font-size:11px;color:var(--text3)">${closedList.length}个</span>
+    </div>
+    ${closedList.length ? renderMonthGroups(closedList) : '<div style="padding:8px 14px;font-size:12px;color:var(--text3)">暂无已清仓标的</div>'}
+  </div>`;
+
+  el.innerHTML = openSection + closedSection;
 }
 
 // ─── Trade detail ─────────────────────────────────────────────────────────
@@ -863,26 +953,20 @@ function renderDetail() {
   empty.style.display = 'none';
   detail.style.display = '';
 
-  const pnl = parseFloat(t.pnl);
-  const pnlStr = isNaN(pnl) ? '—' : (pnl >= 0 ? '+' : '') + pnl.toLocaleString('zh-CN', {maximumFractionDigits: 2});
-  const pnlClass = isNaN(pnl) ? '' : pnl >= 0 ? 'pos' : 'neg';
-  const piStr = t.priceIn ? parseFloat(t.priceIn).toFixed(2) : '—';
-  const poStr = t.priceOut ? parseFloat(t.priceOut).toFixed(2) : '持仓中';
-  const posStr = t.position ? t.position + '%' : '—';
-  const holdDays = t.dateOut ? Math.round((new Date(t.dateOut)-new Date(t.dateIn))/86400000) : null;
-  const holdStr = holdDays !== null ? holdDays + '天' : '持仓中';
-  const dIn = t.dateIn.replace(/-/g, '/');
-  const dOut = t.dateOut ? t.dateOut.replace(/-/g, '/') : '—';
-
-  const chartArea = t.chartImg
-    ? `<div class="chart-img-wrap">
-        <img src="${t.chartImg}" alt="走势图">
-        <button class="chart-remove" onclick="removeChart('${t.id}')">✕ 移除</button>
-       </div>`
-    : `<div class="chart-placeholder" onclick="uploadChart('${t.id}')">
-        <div style="font-size:24px">📈</div>
-        <p>点击上传截图（K线、盘面）</p>
-       </div>`;
+  const pos = computePosition(t);
+  const positionStr = pos.totalShares > 0 ? pos.totalShares.toLocaleString('zh-CN') + '股' : '0股';
+  const avgCostStr = pos.avgCost > 0 ? pos.avgCost.toFixed(2) : '—';
+  const realizedStr = (pos.realizedPnl>=0?'+':'') + pos.realizedPnl.toLocaleString('zh-CN',{maximumFractionDigits:2});
+  const realizedClass = pos.realizedPnl >= 0 ? 'pos' : 'neg';
+  const holdDays = pos.firstDate ? Math.round((new Date(pos.isClosed?pos.lastDate:new Date())-new Date(pos.firstDate))/86400000) : null;
+  const holdStr = holdDays !== null ? holdDays + '天' : '—';
+  // Latest manually-recorded position % (from most recent op that has one filled in)
+  const opsWithPosition = pos.ops.filter(o => o.position !== null && o.position !== undefined && o.position !== '');
+  const latestPositionPct = opsWithPosition.length ? opsWithPosition[opsWithPosition.length - 1].position : null;
+  const latestPositionStr = latestPositionPct !== null ? latestPositionPct + '%' : '—';
+  const statusBadge = pos.isClosed
+    ? `<span class="closed-badge" style="font-size:12px;padding:2px 8px">已清仓</span>`
+    : `<span class="open-badge" style="font-size:12px;padding:2px 8px">持仓中</span>`;
 
   const tags = (t.tags || []);
   const tagHtml = tags.map(tag =>
@@ -896,45 +980,102 @@ function renderDetail() {
     `<span class="star${(t.logicScore||0)>=i?' on':''}" onclick="setScore('${t.id}','logic',${i})">★</span>`
   ).join('');
 
+  // Ops list, newest first
+  const opsSorted = pos.ops.slice().reverse();
+  const opsHtml = opsSorted.map(op => {
+    const realIdx = t.ops.findIndex(o => o.id === op.id);
+    const isBuy = op.action === 'buy';
+    const chartHtml = op.chartImg
+      ? `<div class="op-card-chart-wrap">
+          <img src="${op.chartImg}" alt="截图">
+          <button class="op-card-chart-remove" onclick="removeOpChart('${t.id}','${op.id}')">✕ 移除</button>
+         </div>`
+      : `<button class="op-card-chart-upload" onclick="uploadOpChart('${t.id}','${op.id}')">📈 上传盘面截图</button>`;
+    return `<div class="op-card">
+      <div class="op-card-head">
+        <span class="op-action-badge ${isBuy?'op-action-buy':'op-action-sell'}">${isBuy?'买入':'卖出'}</span>
+        <span class="op-card-shares">${op.shares}股</span>
+        <span class="op-card-price">@ ¥${parseFloat(op.price).toFixed(2)}</span>
+        ${op.position ? `<span style="font-size:11px;color:var(--text3);background:var(--surface2);padding:1px 6px;border-radius:4px">仓位 ${op.position}%</span>` : ''}
+        <span class="op-card-date">${op.date.replace(/-/g,'/')}</span>
+        <span class="op-card-delete" onclick="deleteOp('${t.id}','${op.id}')">删除</span>
+      </div>
+      <div class="op-card-body">
+        <div class="op-card-logic-label">交易逻辑</div>
+        <div class="op-card-logic" contenteditable="true" onblur="saveOpLogic('${t.id}','${op.id}',this.innerText)">${escHtml(op.logic||'')}</div>
+        ${chartHtml}
+      </div>
+    </div>`;
+  }).join('');
+
   detail.innerHTML = `
     <div class="entry-top">
       <div class="entry-left">
         <div class="entry-ticker-row">
           <span class="entry-ticker">${t.ticker}</span>
           ${t.name ? `<span style="font-size:14px;color:var(--text2);font-weight:500">${t.name}</span>` : ''}
-          <span class="dir-badge ${t.dir==='long'?'dir-long':'dir-short'}" style="font-size:12px;padding:2px 7px">${t.dir==='long'?'多头':'空头'}</span>
+          ${statusBadge}
           <span class="pnl-badge neutral">${t.market||'A股'}</span>
         </div>
         <div class="entry-meta">
-          <span>买入 ${dIn}</span>
+          <span>首次建仓 ${pos.firstDate ? pos.firstDate.replace(/-/g,'/') : '—'}</span>
           <span>·</span>
-          <span>卖出 ${dOut}</span>
-          <span>·</span>
-          <span>持仓 ${holdStr}</span>
+          <span>持续 ${holdStr}</span>
         </div>
       </div>
       <div class="entry-actions">
-        <button class="icon-btn" title="编辑基本信息" onclick="openEditModal('${t.id}')">✎</button>
-        <button class="icon-btn" title="删除" onclick="deleteTrade('${t.id}')">🗑</button>
+        <button class="icon-btn" title="删除标的" onclick="deleteTrade('${t.id}')">🗑</button>
       </div>
     </div>
 
-    <div class="data-strip">
-      <div class="data-cell"><div class="data-cell-label">买入价</div><div class="data-cell-val">${piStr}</div></div>
-      <div class="data-cell"><div class="data-cell-label">卖出价</div><div class="data-cell-val">${poStr}</div></div>
-      <div class="data-cell"><div class="data-cell-label">仓位</div><div class="data-cell-val">${posStr}</div></div>
-      <div class="data-cell"><div class="data-cell-label">盈亏</div><div class="data-cell-val ${pnlClass}">${pnlStr}</div></div>
-      <div class="data-cell"><div class="data-cell-label">持仓天数</div><div class="data-cell-val">${holdStr}</div></div>
+    <div class="pos-summary-strip">
+      <div class="data-cell"><div class="data-cell-label">当前持仓</div><div class="data-cell-val">${positionStr}</div></div>
+      <div class="data-cell"><div class="data-cell-label">持仓成本</div><div class="data-cell-val">${avgCostStr}</div></div>
+      <div class="data-cell"><div class="data-cell-label">已实现盈亏</div><div class="data-cell-val ${realizedClass}">${realizedStr}</div></div>
+      <div class="data-cell"><div class="data-cell-label">最新仓位</div><div class="data-cell-val">${latestPositionStr}</div></div>
+      <div class="data-cell"><div class="data-cell-label">操作次数</div><div class="data-cell-val">${pos.ops.length}</div></div>
+      <div class="data-cell"><div class="data-cell-label">持续时间</div><div class="data-cell-val">${holdStr}</div></div>
     </div>
 
-    <div class="chart-zone">
-      <div class="chart-zone-header"><span class="chart-zone-title">盘面截图</span></div>
-      ${chartArea}
+    <div class="section-label" style="margin-bottom:10px">添加交易操作</div>
+    <div class="op-compose">
+      <div class="op-compose-row">
+        <div class="op-field">
+          <label>方向</label>
+          <div class="op-dir-toggle" id="op-dir-toggle-${t.id}">
+            <button class="op-dir-btn sel-buy" onclick="setOpDir('${t.id}','buy')">买入</button>
+            <button class="op-dir-btn" onclick="setOpDir('${t.id}','sell')">卖出</button>
+          </div>
+        </div>
+        <div class="op-field">
+          <label>日期</label>
+          <input type="date" id="op-date-${t.id}" value="${new Date().toISOString().slice(0,10)}">
+        </div>
+        <div class="op-field">
+          <label>价格</label>
+          <input type="number" step="0.01" id="op-price-${t.id}" placeholder="0.00" style="width:90px">
+        </div>
+        <div class="op-field">
+          <label>股数</label>
+          <input type="number" step="1" id="op-shares-${t.id}" placeholder="如 200" style="width:90px">
+        </div>
+        <div class="op-field">
+          <label>最新仓位 %（选填）</label>
+          <input type="number" step="1" id="op-position-${t.id}" placeholder="如 15" style="width:90px">
+        </div>
+      </div>
+      <div class="op-compose-logic">
+        <textarea id="op-logic-${t.id}" placeholder="这次操作的交易逻辑……"></textarea>
+      </div>
+      <div class="op-compose-footer">
+        <button class="img-upload-btn" id="op-img-btn-${t.id}" onclick="uploadPendingOpImg('${t.id}')">📷 附盘面截图</button>
+        <button class="op-submit-btn" onclick="addOp('${t.id}')">记录操作</button>
+      </div>
     </div>
 
-    <div class="section">
-      <div class="section-label">买入逻辑</div>
-      <textarea placeholder="为什么买入？基本面、技术面、催化剂、市场结构……" onblur="saveField('${t.id}','logic',this.value)">${t.logic||''}</textarea>
+    <div class="section-label" style="margin-bottom:10px">操作记录（${pos.ops.length}）</div>
+    <div class="op-list">
+      ${opsHtml || '<div style="font-size:13px;color:var(--text3);padding:8px 0">还没有操作记录</div>'}
     </div>
 
     <div class="section error-block">
@@ -972,29 +1113,101 @@ function renderDetail() {
     </div>
   `;
 
-  // Setup chart upload
-  const fileEl = document.createElement('input');
-  fileEl.type = 'file'; fileEl.accept = 'image/*'; fileEl.style.display = 'none';
-  fileEl.id = 'chart-file-' + t.id;
-  fileEl.onchange = (e) => handleChartUpload(t.id, e);
-  document.body.appendChild(fileEl);
+  // Setup pending op image file input
+  let fi = document.getElementById('op-img-input-' + t.id);
+  if (!fi) {
+    fi = document.createElement('input');
+    fi.type = 'file'; fi.accept = 'image/*'; fi.style.display = 'none';
+    fi.id = 'op-img-input-' + t.id;
+    fi.onchange = (e) => handlePendingOpImg(t.id, e);
+    document.body.appendChild(fi);
+  }
 }
 
-function uploadChart(id) {
-  document.getElementById('chart-file-' + id)?.click();
+// ── Op direction toggle state ──
+let _opDir = {};
+function setOpDir(tid, dir) {
+  _opDir[tid] = dir;
+  const wrap = document.getElementById('op-dir-toggle-' + tid);
+  if (wrap) {
+    const btns = wrap.querySelectorAll('.op-dir-btn');
+    btns[0].className = 'op-dir-btn' + (dir==='buy' ? ' sel-buy' : '');
+    btns[1].className = 'op-dir-btn' + (dir==='sell' ? ' sel-sell' : '');
+  }
 }
-function handleChartUpload(id, e) {
+
+let _pendingOpImg = {};
+function uploadPendingOpImg(tid) {
+  document.getElementById('op-img-input-' + tid)?.click();
+}
+function handlePendingOpImg(tid, e) {
   const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    const t = db.trades.find(x => x.id === id);
-    if (t) { t.chartImg = ev.target.result; saveTrade(t); renderDetail(); }
+    _pendingOpImg[tid] = ev.target.result;
+    const btn = document.getElementById('op-img-btn-' + tid);
+    if (btn) btn.textContent = '📷 已附图';
   };
   reader.readAsDataURL(file);
+  e.target.value = '';
 }
-function removeChart(id) {
-  const t = db.trades.find(x => x.id === id);
-  if (t) { t.chartImg = null; saveTrade(t); renderDetail(); }
+
+function addOp(tid) {
+  const t = db.trades.find(x => x.id === tid);
+  if (!t) return;
+  const dir = _opDir[tid] || 'buy';
+  const date = document.getElementById('op-date-' + tid).value;
+  const price = document.getElementById('op-price-' + tid).value;
+  const shares = document.getElementById('op-shares-' + tid).value;
+  const position = document.getElementById('op-position-' + tid).value;
+  const logic = document.getElementById('op-logic-' + tid).value.trim();
+  if (!date || !price || !shares) { showToast('请填写日期、价格和股数'); return; }
+  if (!t.ops) t.ops = [];
+  t.ops.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+    action: dir, date, price, shares, logic,
+    position: position || null,
+    chartImg: _pendingOpImg[tid] || null
+  });
+  delete _pendingOpImg[tid];
+  delete _opDir[tid];
+  saveTrade(t);
+  renderSidebar(); renderDetail();
+  showToast('操作已记录');
+}
+
+function deleteOp(tid, opId) {
+  if (!confirm('删除这条操作记录？')) return;
+  const t = db.trades.find(x => x.id === tid);
+  if (t) { t.ops = (t.ops||[]).filter(o => o.id !== opId); saveTrade(t); renderSidebar(); renderDetail(); }
+}
+
+function saveOpLogic(tid, opId, val) {
+  const t = db.trades.find(x => x.id === tid);
+  const op = t?.ops.find(o => o.id === opId);
+  if (op) { op.logic = val; debounceSave('oplogic_'+opId, () => saveTrade(t)); }
+}
+
+function uploadOpChart(tid, opId) {
+  const fi = document.createElement('input');
+  fi.type = 'file'; fi.accept = 'image/*';
+  fi.onchange = (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const t = db.trades.find(x => x.id === tid);
+      const op = t?.ops.find(o => o.id === opId);
+      if (op) { op.chartImg = ev.target.result; saveTrade(t); renderDetail(); }
+    };
+    reader.readAsDataURL(file);
+  };
+  fi.click();
+}
+
+function removeOpChart(tid, opId) {
+  const t = db.trades.find(x => x.id === tid);
+  const op = t?.ops.find(o => o.id === opId);
+  if (op) { op.chartImg = null; saveTrade(t); renderDetail(); }
 }
 
 function saveField(id, field, val) {
@@ -1023,17 +1236,19 @@ function showTagInput(id) {
   if (!addBtn) return;
   const inp = document.createElement('input');
   inp.className = 'tag-input'; inp.placeholder = '输入后回车';
+  let committed = false;
   inp.onkeydown = (e) => {
     if (e.key === 'Enter') {
       const val = inp.value.trim();
+      committed = true;
       if (val) {
         const t = db.trades.find(x => x.id === id);
         if (t) { t.tags = [...(t.tags||[]), val]; saveTrade(t); renderDetail(); }
       } else { inp.remove(); addBtn.style.display = ''; }
     }
-    if (e.key === 'Escape') { inp.remove(); addBtn.style.display = ''; }
+    if (e.key === 'Escape') { committed = true; inp.remove(); addBtn.style.display = ''; }
   };
-  inp.onblur = () => { inp.remove(); addBtn.style.display = ''; };
+  inp.onblur = () => { if (!committed) { inp.remove(); addBtn.style.display = ''; } };
   addBtn.style.display = 'none';
   wrap.insertBefore(inp, addBtn);
   inp.focus();
@@ -1041,30 +1256,9 @@ function showTagInput(id) {
 
 // ─── Modal ────────────────────────────────────────────────────────────────
 function openNewModal() {
-  editingId = null;
-  document.getElementById('modal-title').textContent = '新建交易';
-  ['f-ticker','f-name','f-price-in','f-price-out','f-position','f-pnl'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-dir').value = 'long';
+  ['f-ticker','f-name','f-price-in','f-shares-in'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-market').value = 'A股';
   document.getElementById('f-date-in').value = new Date().toISOString().slice(0,10);
-  document.getElementById('f-date-out').value = '';
-  document.getElementById('trade-modal').classList.add('open');
-}
-function openEditModal(id) {
-  const t = db.trades.find(x => x.id === id);
-  if (!t) return;
-  editingId = id;
-  document.getElementById('modal-title').textContent = '编辑交易';
-  document.getElementById('f-ticker').value = t.ticker || '';
-  document.getElementById('f-name').value = t.name || '';
-  document.getElementById('f-dir').value = t.dir || 'long';
-  document.getElementById('f-market').value = t.market || 'A股';
-  document.getElementById('f-date-in').value = t.dateIn || '';
-  document.getElementById('f-date-out').value = t.dateOut || '';
-  document.getElementById('f-price-in').value = t.priceIn || '';
-  document.getElementById('f-price-out').value = t.priceOut || '';
-  document.getElementById('f-position').value = t.position || '';
-  document.getElementById('f-pnl').value = t.pnl || '';
   document.getElementById('trade-modal').classList.add('open');
 }
 function closeModal() { document.getElementById('trade-modal').classList.remove('open'); }
@@ -1072,47 +1266,30 @@ function closeModal() { document.getElementById('trade-modal').classList.remove(
 function saveTradeModal() {
   const ticker = document.getElementById('f-ticker').value.trim().toUpperCase();
   const dateIn = document.getElementById('f-date-in').value;
-  if (!ticker || !dateIn) { showToast('请填写标的代码和买入日期'); return; }
+  const priceIn = document.getElementById('f-price-in').value;
+  const sharesIn = document.getElementById('f-shares-in').value;
+  if (!ticker || !dateIn || !priceIn || !sharesIn) { showToast('请填写标的代码、买入日期、价格和股数'); return; }
 
-  if (editingId) {
-    const t = db.trades.find(x => x.id === editingId);
-    if (t) {
-      t.ticker = ticker;
-      t.name = document.getElementById('f-name').value.trim();
-      t.dir = document.getElementById('f-dir').value;
-      t.market = document.getElementById('f-market').value;
-      t.dateIn = dateIn;
-      t.dateOut = document.getElementById('f-date-out').value || null;
-      t.priceIn = document.getElementById('f-price-in').value || null;
-      t.priceOut = document.getElementById('f-price-out').value || null;
-      t.position = document.getElementById('f-position').value || null;
-      t.pnl = document.getElementById('f-pnl').value || null;
-      saveTrade(t);
-    }
-  } else {
-    const trade = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-      ticker, name: document.getElementById('f-name').value.trim(),
-      dir: document.getElementById('f-dir').value,
-      market: document.getElementById('f-market').value,
-      dateIn, dateOut: document.getElementById('f-date-out').value || null,
-      priceIn: document.getElementById('f-price-in').value || null,
-      priceOut: document.getElementById('f-price-out').value || null,
-      position: document.getElementById('f-position').value || null,
-      pnl: document.getElementById('f-pnl').value || null,
-      logic: '', errors: '', review: '', notes: '',
-      tags: [], execScore: 0, logicScore: 0, chartImg: null
-    };
-    db.trades.unshift(trade);
-    selectedId = trade.id;
-    saveTrade(trade);
-  }
+  const trade = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    ticker, name: document.getElementById('f-name').value.trim(),
+    market: document.getElementById('f-market').value,
+    ops: [{
+      id: Date.now().toString(36) + 'op',
+      action: 'buy', date: dateIn, price: priceIn, shares: sharesIn, logic: '', chartImg: null
+    }],
+    errors: '', review: '', notes: '',
+    tags: [], execScore: 0, logicScore: 0
+  };
+  db.trades.unshift(trade);
+  selectedId = trade.id;
+  saveTrade(trade);
   closeModal(); renderSidebar(); renderDetail();
-  showToast(editingId ? '已更新' : '交易已创建');
+  showToast('标的已创建');
 }
 
 function deleteTrade(id) {
-  if (!confirm('确认删除这笔交易？')) return;
+  if (!confirm('确认删除这个标的及其所有交易记录？')) return;
   db.trades = db.trades.filter(x => x.id !== id);
   if (selectedId === id) selectedId = null;
   deleteTradeSB(id); renderSidebar(); renderDetail();
@@ -1122,17 +1299,19 @@ function deleteTrade(id) {
 // ─── Stats ────────────────────────────────────────────────────────────────
 function renderStats() {
   const trades = db.trades;
-  const closed = trades.filter(t => t.pnl !== null && t.pnl !== '');
-  const totalPnl = closed.reduce((s, t) => s + (parseFloat(t.pnl)||0), 0);
-  const wins = closed.filter(t => parseFloat(t.pnl) > 0).length;
+  const positions = trades.map(t => ({ t, pos: computePosition(t) }));
+  const closed = positions.filter(({pos}) => pos.isClosed);
+  const totalPnl = closed.reduce((s, {pos}) => s + pos.realizedPnl, 0);
+  const wins = closed.filter(({pos}) => pos.realizedPnl > 0).length;
   const winRate = closed.length ? Math.round(wins/closed.length*100) : 0;
   const avgPnl = closed.length ? (totalPnl / closed.length) : 0;
 
-  // Monthly PnL
+  // Monthly PnL (by last-op date of closed positions)
   const monthly = {};
-  closed.forEach(t => {
-    const k = t.dateIn.slice(0,7);
-    monthly[k] = (monthly[k]||0) + (parseFloat(t.pnl)||0);
+  closed.forEach(({pos}) => {
+    const k = (pos.lastDate || '').slice(0,7);
+    if (!k) return;
+    monthly[k] = (monthly[k]||0) + pos.realizedPnl;
   });
   const mKeys = Object.keys(monthly).sort().slice(-8);
   const maxAbs = Math.max(...mKeys.map(k => Math.abs(monthly[k])), 1);
@@ -1156,6 +1335,7 @@ function renderStats() {
     `<span class="tag">${tag} <span style="color:var(--text3)">${cnt}</span></span>`
   ).join('');
 
+  const openCount = positions.length - closed.length;
   const pnlClass = totalPnl >= 0 ? 'pos' : 'neg';
   const totalStr = (totalPnl>=0?'+':'') + totalPnl.toLocaleString('zh-CN',{maximumFractionDigits:0});
 
@@ -1163,9 +1343,9 @@ function renderStats() {
     <div style="font-size:16px;font-weight:600;margin-bottom:18px">总览</div>
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-card-label">累计盈亏</div>
+        <div class="stat-card-label">累计已实现盈亏</div>
         <div class="stat-card-val ${pnlClass}">${totalStr}</div>
-        <div class="stat-card-sub">已平仓 ${closed.length} 笔</div>
+        <div class="stat-card-sub">已清仓 ${closed.length} 个 · 持仓中 ${openCount} 个</div>
       </div>
       <div class="stat-card">
         <div class="stat-card-label">胜率</div>
@@ -1175,12 +1355,12 @@ function renderStats() {
       <div class="stat-card">
         <div class="stat-card-label">平均盈亏</div>
         <div class="stat-card-val ${avgPnl>=0?'pos':'neg'}">${(avgPnl>=0?'+':'') + avgPnl.toLocaleString('zh-CN',{maximumFractionDigits:0})}</div>
-        <div class="stat-card-sub">每笔已平仓</div>
+        <div class="stat-card-sub">每个已清仓标的</div>
       </div>
     </div>
     ${mKeys.length ? `
     <div class="chart-bar-wrap">
-      <div class="chart-bar-title">近期月度盈亏</div>
+      <div class="chart-bar-title">近期月度盈亏（按清仓日期）</div>
       <div class="bar-chart">${bars}</div>
     </div>` : ''}
     ${topTags.length ? `
