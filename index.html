@@ -209,6 +209,106 @@
   /* File input hidden */
   #file-import { display: none; }
 
+  /* ══════════════════════════════════════════════════════════
+     MOBILE RESPONSIVE (≤768px)
+     Strategy: sidebar and detail become full-width "pages".
+     Tapping an item shows the detail page; a back button returns.
+     ══════════════════════════════════════════════════════════ */
+  .mobile-back-btn { display: none; }
+
+  @media (max-width: 768px) {
+    body { overflow: hidden; }
+
+    /* Topbar: shrink to essentials, allow horizontal scroll if needed */
+    .topbar { padding: 0 10px; height: 48px; gap: 6px; }
+    .topbar-left { gap: 8px; min-width: 0; }
+    .app-name { display: none; }
+    .nav-tabs { gap: 1px; }
+    .nav-tab { padding: 5px 8px; font-size: 12px; white-space: nowrap; }
+    .topbar-right { gap: 4px; }
+    .topbar-right .btn { padding: 5px 8px; font-size: 11px; white-space: nowrap; }
+    .topbar-right .btn-primary { padding: 5px 9px; }
+    /* Hide export/import text on very small screens, keep icons via title */
+    #file-import { display: none; }
+
+    /* ── Journal: sidebar/detail as swappable full-width pages ── */
+    .main { position: relative; }
+    .sidebar {
+      width: 100%;
+      border-right: none;
+      position: absolute; inset: 0;
+      z-index: 1;
+      transition: transform 0.2s ease;
+    }
+    .detail {
+      width: 100%;
+      position: absolute; inset: 0;
+      z-index: 2;
+      transform: translateX(100%);
+      transition: transform 0.2s ease;
+      background: var(--bg);
+    }
+    /* When a trade/watch item is selected on mobile, slide detail into view */
+    body.mobile-detail-open .sidebar { transform: translateX(-100%); }
+    body.mobile-detail-open .detail { transform: translateX(0); }
+
+    .entry-wrap, .stats-wrap, .system-wrap, .watch-entry-wrap { padding: 16px 14px 50px; max-width: 100%; }
+
+    /* Back button shown at top of detail pane on mobile */
+    .mobile-back-btn {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--text2); cursor: pointer;
+      padding: 4px 0 14px; margin: 0; border: none; background: none;
+      font-family: var(--font);
+    }
+    .mobile-back-btn::before { content: '←'; font-size: 15px; }
+
+    /* Data grids collapse to fewer columns */
+    .data-strip { grid-template-columns: repeat(2, 1fr); }
+    .pos-summary-strip { grid-template-columns: repeat(2, 1fr); }
+    .stats-grid { grid-template-columns: 1fr; }
+
+    /* Op compose form: stack fields */
+    .op-compose-row { flex-direction: column; align-items: stretch; gap: 10px; }
+    .op-field input, .op-field select { width: 100% !important; }
+    .op-dir-toggle { width: 100%; }
+    .op-dir-btn { flex: 1; }
+
+    /* Modal: full width on mobile */
+    .modal { width: 92vw !important; max-height: 88vh; overflow-y: auto; padding: 18px; }
+    .form-grid { grid-template-columns: 1fr; }
+
+    /* Watchlist mobile layout (same swap pattern) */
+    .watch-layout { position: relative; height: 100%; }
+    .watch-sidebar {
+      width: 100%;
+      border-right: none;
+      position: absolute; inset: 0;
+      z-index: 1;
+      transition: transform 0.2s ease;
+    }
+    .watch-detail {
+      width: 100%;
+      position: absolute; inset: 0;
+      z-index: 2;
+      transform: translateX(100%);
+      transition: transform 0.2s ease;
+      background: var(--bg);
+    }
+    body.mobile-detail-open .watch-sidebar { transform: translateX(-100%); }
+    body.mobile-detail-open .watch-detail { transform: translateX(0); }
+
+    .watch-info-strip { gap: 6px; }
+    .compose-selectors { gap: 4px; }
+    .compose-sel { font-size: 11px; padding: 4px 8px; }
+
+    /* Toast position adjustment */
+    .toast { bottom: 16px; right: 16px; left: 16px; text-align: center; }
+
+    /* Login screen mobile */
+    .login-box { width: 88vw; padding: 28px 22px 24px; }
+  }
+
   /* ── Position-based trade journal ─────────────────────────── */
   .sidebar-status-section { border-bottom: 1px solid var(--border); padding-bottom: 4px; }
   .sidebar-status-section:last-child { border-bottom: none; }
@@ -809,6 +909,7 @@ function saveDB() {
 // ─── View switching ──────────────────────────────────────────────────────
 function switchView(v) {
   currentView = v;
+  document.body.classList.remove('mobile-detail-open');
   const views = ['journal','stats','system','watch'];
   views.forEach(name => {
     const el = document.getElementById('view-' + name);
@@ -819,7 +920,11 @@ function switchView(v) {
   });
   if (v === 'stats') renderStats();
   if (v === 'system') renderSystem();
-  if (v === 'watch') { renderWatchSidebar(); if (!selectedWatchId && db.watchlist.length) { selectedWatchId = db.watchlist[0].id; } renderWatchDetail(); }
+  if (v === 'watch') {
+    renderWatchSidebar();
+    if (!selectedWatchId && db.watchlist.length && window.innerWidth > 768) { selectedWatchId = db.watchlist[0].id; }
+    renderWatchDetail();
+  }
 }
 
 // ─── Sidebar ─────────────────────────────────────────────────────────────
@@ -938,6 +1043,11 @@ function selectTrade(id) {
   selectedId = id;
   renderSidebar();
   renderDetail();
+  if (window.innerWidth <= 768) document.body.classList.add('mobile-detail-open');
+}
+
+function backToList() {
+  document.body.classList.remove('mobile-detail-open');
 }
 
 function renderDetail() {
@@ -1009,6 +1119,7 @@ function renderDetail() {
   }).join('');
 
   detail.innerHTML = `
+    <button class="mobile-back-btn" onclick="backToList()">返回列表</button>
     <div class="entry-top">
       <div class="entry-left">
         <div class="entry-ticker-row">
@@ -1291,7 +1402,7 @@ function saveTradeModal() {
 function deleteTrade(id) {
   if (!confirm('确认删除这个标的及其所有交易记录？')) return;
   db.trades = db.trades.filter(x => x.id !== id);
-  if (selectedId === id) selectedId = null;
+  if (selectedId === id) { selectedId = null; document.body.classList.remove('mobile-detail-open'); }
   deleteTradeSB(id); renderSidebar(); renderDetail();
   showToast('已删除');
 }
@@ -1520,6 +1631,7 @@ function selectWatch(id) {
   pendingTlImg = null;
   renderWatchSidebar();
   renderWatchDetail();
+  if (window.innerWidth <= 768) document.body.classList.add('mobile-detail-open');
 }
 
 // ── Record type & logic state labels ──
@@ -1616,6 +1728,7 @@ function renderWatchDetail() {
     : `<button class="img-upload-btn" onclick="uploadPendingImg('${w.id}')">📷 附图</button>`;
 
   el.innerHTML = `<div class="watch-entry-wrap">
+    <button class="mobile-back-btn" onclick="backToList()">返回列表</button>
     <div class="watch-header">
       <div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
@@ -1842,7 +1955,10 @@ function saveWatch() {
 function deleteWatch(id) {
   if (!confirm('删除该跟踪对象及所有记录？')) return;
   db.watchlist = db.watchlist.filter(x => x.id !== id);
-  if (selectedWatchId === id) selectedWatchId = db.watchlist[0]?.id || null;
+  if (selectedWatchId === id) {
+    selectedWatchId = window.innerWidth > 768 ? (db.watchlist[0]?.id || null) : null;
+    if (window.innerWidth <= 768) document.body.classList.remove('mobile-detail-open');
+  }
   deleteWatchSB(id); renderWatchSidebar(); renderWatchDetail();
   showToast('已删除');
 }
